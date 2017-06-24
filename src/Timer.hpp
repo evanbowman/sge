@@ -4,7 +4,7 @@
 
 #include "Types.hpp"
 
-template <typename Clock = std::chrono::steady_clock>
+template <typename Clock>
 class Timer {
     using Instant = typename Clock::time_point;
 public:
@@ -21,3 +21,5 @@ public:
 private:
     Instant m_lastReset;
 };
+
+using SteadyTimer = Timer<std::chrono::steady_clock>;

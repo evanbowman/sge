@@ -2,3 +2,10 @@
 \#*\#
 .DS_Store
 CMakeFiles
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+config.h
+BlindJump
+BlindJump.app
+BlindJump.exe

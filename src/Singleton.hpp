@@ -1,7 +1,5 @@
 #pragma once
 
-namespace Flight {
-
 template <typename T> class Singleton {
 public:
     static T & Instance() {
@@ -9,4 +7,3 @@ public:
         return m_instance;
     }
 };
-}
