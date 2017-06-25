@@ -44,9 +44,7 @@ bool Engine::IsRunning() const {
 
 UID Engine::CreateEntity() {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
-    PoolAllocator<Entity> allocator;
-    m_entities[m_uidCounters.entityCount] =
-        std::allocate_shared<Entity>(allocator);
+    m_entities[m_uidCounters.entityCount];
     return m_uidCounters.entityCount++;
 }
 

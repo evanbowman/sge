@@ -4,7 +4,6 @@
 #include <list>
 #include <unordered_map>
 
-#include "PoolAllocator.hpp"
 #include "Entity.hpp"
 #include "Types.hpp"
 #include "Timer.hpp"
@@ -13,25 +12,9 @@
 
 class Engine {
 public:
-    using EntityMap =
-        std::unordered_map<UID,
-                           std::shared_ptr<Entity>,
-                           std::hash<UID>,
-                           std::equal_to<UID>,
-                           PoolAllocator<std::pair<const UID,
-                                                   std::shared_ptr<Entity>>>>;
-    using TimerMap =
-        std::unordered_map<UID,
-                           SteadyTimer,
-                           std::hash<UID>,
-                           std::equal_to<UID>,
-                           PoolAllocator<std::pair<const UID, SteadyTimer>>>;
-    using AnimationMap =
-        std::unordered_map<UID,
-                           Animation,
-                           std::hash<UID>,
-                           std::equal_to<UID>,
-                           PoolAllocator<std::pair<const UID, Animation>>>;
+    using EntityMap = std::unordered_map<UID, std::shared_ptr<Entity>>;
+    using TimerMap = std::unordered_map<UID, SteadyTimer>;
+    using AnimationMap = std::unordered_map<UID, Animation>;
     
     Engine();
 
