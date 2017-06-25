@@ -1,19 +1,23 @@
+(include "animations.scm")
 
 (define main
   (lambda ()
     (logic-loop)))
 
-(define delta-timer (ENGINE-create-timer))
+(define delta-timer (ENGINE-timer-create))
 
 (define logic-loop
   (lambda ()
     (cond
      [(not (ENGINE-is-running)) '()]
      [else
-      (logic-step (ENGINE-reset-timer delta-timer))
+      (logic-step (ENGINE-timer-reset delta-timer))
       (logic-loop)])))
+
+(define times '())
+(define num-times 0)
 
 (define logic-step
   (lambda (dt)
-    (display dt)
-    (display "\n")))
+    ;; TODO!
+    '()))
