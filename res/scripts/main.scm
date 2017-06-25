@@ -1,7 +1,10 @@
 (include "animations.scm")
 (include "math.scm")
+(include "world.scm")
 
-(define delta-timer (ENGINE-timer-create))
+(define delta-timer (eng-timer-create))
+
+(set! *random-state* (random-state-from-platform))
 
 (define main
   (lambda ()
@@ -17,12 +20,11 @@
 (define logic-loop
   (lambda ()
     (cond
-     [(not (ENGINE-is-running)) '()]
+     [(not (eng-is-running?)) '()]
      [else
-      (logic-step (ENGINE-timer-reset delta-timer))
+      (logic-step (eng-timer-reset delta-timer))
       (logic-loop)])))
 
 (define logic-step
   (lambda (dt)
-    ;; TODO!
     '()))

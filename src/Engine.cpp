@@ -21,6 +21,19 @@ void Engine::EventLoop() {
     }
 }
 
+void Engine::EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req) {
+    std::lock_guard<std::mutex> lk(m_textureRequestMtx);
+    m_textureRequests.push_back(req);
+}
+
+void Engine::HandleTextureRequests() {
+    std::lock_guard<std::mutex> lk(m_textureRequestMtx);
+    for (auto & req : m_textureRequests) {
+        m_textureMgr.Accept(*req);
+    }
+    m_textureRequests.clear();
+}
+
 void Engine::Run(RunMode mode) {
     std::thread logicThread([mode] {
         if (mode == RunMode::Interactive) {
@@ -32,6 +45,7 @@ void Engine::Run(RunMode mode) {
     // Note: the guile interpreter never returns
     logicThread.detach();
     while (m_window.isOpen()) {
+        HandleTextureRequests();
         EventLoop();
         m_window.clear();
         m_window.display();
@@ -44,7 +58,7 @@ bool Engine::IsRunning() const {
 
 UID Engine::CreateEntity() {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
-    m_entities[m_uidCounters.entityCount];
+    m_entities[m_uidCounters.entityCount] = std::make_shared<Entity>();
     return m_uidCounters.entityCount++;
 }
 
@@ -54,9 +68,10 @@ UID Engine::CreateTimer() {
 }
 
 UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc) {
+    auto req = std::make_shared<TextureLoadRequest>(sourceFile);
+    EnqueueTextureRequest(req);
     m_animations[m_uidCounters.animationCount] = {
-        m_textureMgr.GetTexture(sourceFile),
-        frameDesc
+        *req->GetResult(), frameDesc
     };
     return m_uidCounters.animationCount++;
 }

@@ -39,18 +39,18 @@ static void ThrowMissingEntityError(const char* context) {
               "Entity id lookup failed", SCM_EOL, SCM_EOL);   
 }
     
-SCM_DEFINE (EntityCreate, "ENGINE-entity-create", 0, 0, 0,
+SCM_DEFINE (EntityCreate, "eng-entity-create", 0, 0, 0,
             (), "Create an entity.") {
     return scm_from_ssize_t(engine.CreateEntity());
 }
 
-SCM_DEFINE (EntityRemove, "ENGINE-entity-remove", 1, 0, 0,
+SCM_DEFINE (EntityRemove, "eng-entity-remove", 1, 0, 0,
             (SCM id), "Remove an entity.") {
     engine.RemoveEntity(scm_to_ssize_t(id));
     return SCM_EOL;
 }
 
-SCM_DEFINE (EntitySetPosition, "ENGINE-entity-set-position", 3, 0, 0,
+SCM_DEFINE (EntitySetPosition, "eng-entity-set-position", 3, 0, 0,
             (SCM id, SCM x, SCM y), "Set an entity\'s position.") {
     auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
     if (entity) {
@@ -60,67 +60,61 @@ SCM_DEFINE (EntitySetPosition, "ENGINE-entity-set-position", 3, 0, 0,
         };
         entity->SetPosition(pos);
     } else {
-        ThrowMissingEntityError("ENGINE-entity-set-position");
+        ThrowMissingEntityError("eng-entity-set-position");
     }
     return SCM_EOL;
 }
 
-SCM_DEFINE (EntityGetX, "ENGINE-entity-get-x-position", 1, 0, 0,
+SCM_DEFINE (EntityGetX, "eng-entity-get-x-position", 1, 0, 0,
             (SCM id), "Get an entity\'s x position.") {
     auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
     if (entity) {
         return scm_from_double(entity->GetPosition().x);
     }
-    ThrowMissingEntityError("ENGINE-entity-get-x-position");
+    ThrowMissingEntityError("eng-entity-get-x-position");
     return SCM_EOL;
 }
 
-SCM_DEFINE (EntityGetY, "ENGINE-entity-get-y-position", 1, 0, 0,
+SCM_DEFINE (EntityGetY, "eng-entity-get-y-position", 1, 0, 0,
             (SCM id), "Get an entity\'s y position.") {
     auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
     if (entity) {
         return scm_from_double(entity->GetPosition().y);
     }
-    ThrowMissingEntityError("ENGINE-entity-get-y-position");
+    ThrowMissingEntityError("eng-entity-get-y-position");
     return SCM_EOL;
 }
 
-SCM_DEFINE (IsRunning, "ENGINE-is-running", 0, 0, 0,
+SCM_DEFINE (IsRunning, "eng-is-running?", 0, 0, 0,
             (), "Check whether the engine is running.") {
     return scm_from_bool(engine.IsRunning());
 }
 
-SCM_DEFINE (TimerCreate, "ENGINE-timer-create", 0, 0, 0,
+SCM_DEFINE (TimerCreate, "eng-timer-create", 0, 0, 0,
             (), "Create a timer.") {
     return scm_from_ssize_t(engine.CreateTimer());
 }
 
-SCM_DEFINE (TimerReset, "ENGINE-timer-reset", 1, 0, 0,
+SCM_DEFINE (TimerReset, "eng-timer-reset", 1, 0, 0,
             (SCM id), "Create a timer.") {
     return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(id)));
 }
 
-SCM_DEFINE (TimerRemove, "ENGINE-timer-remove", 1, 0, 0,
+SCM_DEFINE (TimerRemove, "eng-timer-remove", 1, 0, 0,
             (SCM id), "Remove a timer.") {
     engine.RemoveTimer(scm_to_ssize_t(id));
     return SCM_EOL;
 }
     
-SCM_DEFINE (CreateAnimation, "ENGINE-create-animation", 5, 0, 0,
+SCM_DEFINE (CreateAnimation, "eng-create-animation", 5, 0, 0,
             (SCM fname, SCM x, SCM y, SCM w, SCM h),
             "Create an animation, "
             "(fname x y keyframe-width keyframe-height)") {
-    try {
-        return scm_from_ssize_t(
+    return scm_from_ssize_t(
                 engine.CreateAnimation(scm_to_latin1_string(fname), {
                         scm_to_int(x), scm_to_int(y),
                         scm_to_int(w), scm_to_int(h)
                     }));
-    } catch (MissingResource& ex) {
-        scm_error(scm_misc_error_key, "ENGINE-create-animation",
-                  ex.what(), SCM_EOL, SCM_EOL);
-    }
-
 }
 
 void DoEngineAPIWrap() {

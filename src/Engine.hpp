@@ -37,15 +37,20 @@ public:
     
 private:
     void EventLoop();
-
+    
+    void EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req);
+    void HandleTextureRequests();
+    
     sf::RenderWindow m_window;
     std::mutex m_entitiesMtx;
     TextureManager m_textureMgr;
+    std::mutex m_textureRequestMtx;
+    std::vector<std::shared_ptr<TextureLoadRequest>> m_textureRequests;
     
     EntityMap m_entities;
     TimerMap m_timers;
     AnimationMap m_animations;
-    
+
     struct UIDCounters {
         UID entityCount;
         UID timerCount;
