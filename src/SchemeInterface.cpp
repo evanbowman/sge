@@ -2,10 +2,12 @@
 #include "Engine.hpp"
 #include "Singleton.hpp"
 #include <libguile.h>
+#include "ResourcePath.hpp"
+#include "Exceptions.hpp"
 
 namespace {
 void DoEngineAPIWrap();
-static const auto mainScript = "main.scm";
+static const auto entryScriptPath = ResourcePath() + "scripts/main.scm";
 }
 
 void scheme::REPLEntry() {
@@ -13,7 +15,7 @@ void scheme::REPLEntry() {
     scm_boot_guile(dummyArgs.first, dummyArgs.second,
                    [](void* closure, int argc, char** argv) {
                        DoEngineAPIWrap();
-                       scm_c_primitive_load(mainScript);
+                       scm_c_primitive_load(entryScriptPath.c_str());
                        scm_shell(argc, argv);
                    }, 0);
 }
@@ -23,13 +25,11 @@ void scheme::ScriptEntry() {
     scm_boot_guile(dummyArgs.first, dummyArgs.second,
                    [](void* closure, int argc, char** argv) {
                        DoEngineAPIWrap();
-                       scm_c_primitive_load(mainScript);
+                       scm_c_primitive_load(entryScriptPath.c_str());
                        SCM func = scm_variable_ref(scm_c_lookup("main"));
                        scm_call_0(func);
                    }, 0);
 }
-
-#include <iostream>
 
 namespace {
 auto& engine = Singleton<Engine>::Instance();
@@ -100,14 +100,29 @@ SCM_DEFINE (TimerReset, "ENGINE-timer-reset", 1, 0, 0,
     return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(id)));
 }
 
+SCM_DEFINE (TimerRemove, "ENGINE-timer-remove", 1, 0, 0,
+            (SCM id), "Remove a timer.") {
+    engine.RemoveTimer(scm_to_ssize_t(id));
+    return SCM_EOL;
+}
+    
 SCM_DEFINE (CreateAnimation, "ENGINE-create-animation", 5, 0, 0,
             (SCM fname, SCM x, SCM y, SCM w, SCM h),
             "Create an animation, "
             "(fname x y keyframe-width keyframe-height)") {
-    // TODO....
-    return SCM_EOL;
+    try {
+        return scm_from_ssize_t(
+                engine.CreateAnimation(scm_to_latin1_string(fname), {
+                        scm_to_int(x), scm_to_int(y),
+                        scm_to_int(w), scm_to_int(h)
+                    }));
+    } catch (MissingResource& ex) {
+        scm_error(scm_misc_error_key, "ENGINE-create-animation",
+                  ex.what(), SCM_EOL, SCM_EOL);
+    }
+
 }
-    
+
 void DoEngineAPIWrap() {
     /* guile comes with a handy utility called guile-snarf
      * that makes defining API functions easier (see SCM_DEFINES 

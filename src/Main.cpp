@@ -2,6 +2,7 @@
 
 #include "Singleton.hpp"
 #include "Engine.hpp"
+#include "ResourcePath.hpp"
 
 int main(int argc, char** argv) {
     switch (argc) {

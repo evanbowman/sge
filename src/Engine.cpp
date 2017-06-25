@@ -1,13 +1,12 @@
-#include <iostream>
 #include <thread>
 
 #include "Engine.hpp"
 #include "SchemeInterface.hpp"
 
 Engine::Engine() : m_window(sf::VideoMode(640, 480),
-                            "BE",
+                            "Engine",
                             sf::Style::Default),
-                   m_uriCounters{} {
+                   m_uidCounters{} {
     m_window.setVerticalSyncEnabled(true);
 }
 
@@ -43,18 +42,28 @@ bool Engine::IsRunning() const {
     return m_window.isOpen();
 }
 
-URI Engine::CreateEntity() {
+UID Engine::CreateEntity() {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
-    m_entities[m_uriCounters.entityCount] = std::make_shared<Entity>();
-    return m_uriCounters.entityCount++;
+    PoolAllocator<Entity> allocator;
+    m_entities[m_uidCounters.entityCount] =
+        std::allocate_shared<Entity>(allocator);
+    return m_uidCounters.entityCount++;
 }
 
-URI Engine::CreateTimer() {
-    m_timers[m_uriCounters.timerCount] = SteadyTimer{};
-    return m_uriCounters.timerCount++;
+UID Engine::CreateTimer() {
+    m_timers[m_uidCounters.timerCount] = SteadyTimer{};
+    return m_uidCounters.timerCount++;
 }
 
-void Engine::RemoveEntity(URI id) {
+UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc) {
+    m_animations[m_uidCounters.animationCount] = {
+        m_textureMgr.GetTexture(sourceFile),
+        frameDesc
+    };
+    return m_uidCounters.animationCount++;
+}
+
+void Engine::RemoveEntity(UID id) {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
     auto mapIter = m_entities.find(id);
     if (mapIter != m_entities.end()) {
@@ -62,7 +71,7 @@ void Engine::RemoveEntity(URI id) {
     }
 }
 
-Entity* Engine::GetEntityRaw(URI id) {
+Entity* Engine::GetEntityRaw(UID id) {
     const auto entity = m_entities.find(id);
     if (entity != m_entities.end()) {
         return entity->second.get();
@@ -70,9 +79,16 @@ Entity* Engine::GetEntityRaw(URI id) {
     return nullptr;
 }
 
-USec Engine::ResetTimer(URI id) {
+USec Engine::ResetTimer(UID id) {
     if (id < m_timers.size()) {
         return m_timers[id].Reset();
     }
     return 0;
+}
+
+void Engine::RemoveTimer(UID id) {
+    auto mapIter = m_timers.find(id);
+    if (mapIter != m_timers.end()) {
+        m_timers.erase(mapIter);
+    }
 }

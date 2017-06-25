@@ -20,10 +20,21 @@ public:
     struct rebind {
         using other = PoolAllocator<U>;
     };
-    
-    T* allocate(size_type) { return m_pool.Alloc(); }
 
-    void deallocate(T* p, size_type) { m_pool.Release(p); }
+    PoolAllocator() noexcept {};
+    
+    PoolAllocator(const PoolAllocator&) noexcept {};
+    
+    PoolAllocator<T>& operator=(const PoolAllocator&) { return *this; }
+    
+    ~PoolAllocator() {}
+    
+    template<typename U>
+    PoolAllocator(const PoolAllocator<U>&) noexcept {};
+    
+    pointer allocate(size_type) { return m_pool.Alloc(); }
+
+    void deallocate(pointer p, size_type) { m_pool.Release(p); }
     
     void destroy(pointer p) {
         p->~T();
@@ -38,6 +49,16 @@ public:
         new((void*)p) T(val);
     }
 };
+
+template <typename T, typename U>
+inline bool operator==(const PoolAllocator<T>&, const PoolAllocator<U>&) {
+    return true;
+}
+
+template <typename T, typename U>
+inline bool operator!=(const PoolAllocator<T>& a, const PoolAllocator<U>& b) {
+    return !(a == b);
+}
 
 template <typename T>
 MemPool<T> PoolAllocator<T>::m_pool;

@@ -1,6 +1,8 @@
 (include "animations.scm")
 (include "math.scm")
 
+(define delta-timer (ENGINE-timer-create))
+
 (define main
   (lambda ()
     (catch #t
@@ -11,8 +13,6 @@
          (current-error-port)
          "Uncaught throw to '~a: ~a\n"
          key parameters)))))
-
-(define delta-timer (ENGINE-timer-create))
 
 (define logic-loop
   (lambda ()

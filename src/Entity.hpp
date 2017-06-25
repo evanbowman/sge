@@ -11,4 +11,6 @@ public:
 private:
     AABB m_bounds;
     Vec2 m_position;
+    UID m_animation;
+    size_t m_keyframe;
 };

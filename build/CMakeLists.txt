@@ -32,7 +32,7 @@ if(APPLE)
   include_directories(${GUILE_INCLUDE_DIRS})
   link_directories(${GUILE_LIBRARY_DIRS})
   add_definitions(${GUILE_CFLAGS_OTHER})
-  target_link_libraries(${EXECUTABLE_NAME} "-framework sfml-window -framework sfml-graphics -framework sfml-system -framework sfml-audio" ${GUILE_LIBRARIES})
+  target_link_libraries(${EXECUTABLE_NAME} "-framework sfml-window -framework sfml-graphics -framework Cocoa -framework sfml-system -framework sfml-audio" ${GUILE_LIBRARIES})
   # set(MACOSX_BUNDLE_BUNDLE_NAME ${EXECUTABLE_NAME})
   # set(MACOSX_BUNDLE_ICON_FILE icon.icns)
   # add_custom_target(pkg ALL mkdir -p ${EXECUTABLE_NAME}.app/Contents/Resources
