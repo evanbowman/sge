@@ -20,11 +20,19 @@
 (define logic-loop
   (lambda ()
     (cond
-     [(not (eng-is-running?)) '()]
-     [else
+     ((not (eng-is-running?)) '())
+     (else
       (logic-step (eng-timer-reset delta-timer))
-      (logic-loop)])))
+      (logic-loop)))))
 
 (define logic-step
   (lambda (dt)
     '()))
+
+((lambda ()
+   (define temp-timer (eng-timer-create))
+   (define result (create-world 48 48 6))
+   (display (eng-timer-reset temp-timer))
+   (array-for-each (lambda (lst)
+                     (display lst)) (car result))
+   (eng-timer-remove temp-timer)))
