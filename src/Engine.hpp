@@ -18,21 +18,29 @@ public:
     };
     
     void Run(RunMode mode);
+    bool IsRunning() const;
     
     URI CreateEntity();
-    void RemoveEntity(URI id);
-    Entity* GetEntityRaw(URI id);
-    bool IsRunning() const;
-    USec ResetTimer(URI id);
     URI CreateTimer();
+    URI CreateAnimation();
+    
+    void RemoveEntity(URI id);
+
+    Entity* GetEntityRaw(URI id);
+    USec ResetTimer(URI id);
     
 private:
     void EventLoop();
 
     sf::RenderWindow m_window;
     std::mutex m_entitiesMtx;
-    // TODO: Add PoolAllocator for entities?
     std::unordered_map<URI, std::shared_ptr<Entity>> m_entities;
-    std::vector<Timer<std::chrono::steady_clock>> m_timers;
-    URI m_uriCounter;
+    std::unordered_map<URI, Timer<std::chrono::steady_clock>> m_timers;
+    
+    struct URICounters {
+        URI entityCount;
+        URI timerCount;
+        URI animationCount;
+    };
+    URICounters m_uriCounters;
 };

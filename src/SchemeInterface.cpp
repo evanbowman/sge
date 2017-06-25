@@ -33,17 +33,25 @@ void scheme::ScriptEntry() {
 
 namespace {
 auto& engine = Singleton<Engine>::Instance();
+
+static void ThrowMissingEntityError(const char* context) {
+    scm_error(scm_misc_error_key, context,
+              "Entity id lookup failed", SCM_EOL, SCM_EOL);   
+}
     
-SCM EntityCreate() {    
+SCM_DEFINE (EntityCreate, "ENGINE-entity-create", 0, 0, 0,
+            (), "Create an entity.") {
     return scm_from_ssize_t(engine.CreateEntity());
 }
 
-SCM EntityRemove(SCM params) {
-    engine.RemoveEntity(scm_to_ssize_t(params));
+SCM_DEFINE (EntityRemove, "ENGINE-entity-remove", 1, 0, 0,
+            (SCM id), "Remove an entity.") {
+    engine.RemoveEntity(scm_to_ssize_t(id));
     return SCM_EOL;
 }
 
-SCM EntitySetPosition(SCM id, SCM x, SCM y) {
+SCM_DEFINE (EntitySetPosition, "ENGINE-entity-set-position", 3, 0, 0,
+            (SCM id, SCM x, SCM y), "Set an entity\'s position.") {
     auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
     if (entity) {
         const Vec2 pos {
@@ -51,36 +59,60 @@ SCM EntitySetPosition(SCM id, SCM x, SCM y) {
             static_cast<float>(scm_to_double(y))
         };
         entity->SetPosition(pos);
+    } else {
+        ThrowMissingEntityError("ENGINE-entity-set-position");
     }
     return SCM_EOL;
 }
-    
-SCM IsRunning() {
+
+SCM_DEFINE (EntityGetX, "ENGINE-entity-get-x-position", 1, 0, 0,
+            (SCM id), "Get an entity\'s x position.") {
+    auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
+    if (entity) {
+        return scm_from_double(entity->GetPosition().x);
+    }
+    ThrowMissingEntityError("ENGINE-entity-get-x-position");
+    return SCM_EOL;
+}
+
+SCM_DEFINE (EntityGetY, "ENGINE-entity-get-y-position", 1, 0, 0,
+            (SCM id), "Get an entity\'s y position.") {
+    auto entity = engine.GetEntityRaw(scm_to_ssize_t(id));
+    if (entity) {
+        return scm_from_double(entity->GetPosition().y);
+    }
+    ThrowMissingEntityError("ENGINE-entity-get-y-position");
+    return SCM_EOL;
+}
+
+SCM_DEFINE (IsRunning, "ENGINE-is-running", 0, 0, 0,
+            (), "Check whether the engine is running.") {
     return scm_from_bool(engine.IsRunning());
 }
 
-SCM TimerCreate() {
+SCM_DEFINE (TimerCreate, "ENGINE-timer-create", 0, 0, 0,
+            (), "Create a timer.") {
     return scm_from_ssize_t(engine.CreateTimer());
 }
 
-SCM TimerReset(SCM params) {
-    return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(params)));
+SCM_DEFINE (TimerReset, "ENGINE-timer-reset", 1, 0, 0,
+            (SCM id), "Create a timer.") {
+    return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(id)));
 }
 
-SCM LoadAnimation(SCM fname, SCM x, SCM y, SCM w, SCM h) {
-    std::cout << scm_to_ssize_t(x) << " "
-              << scm_to_ssize_t(y) << " "
-              << scm_to_ssize_t(w) << " "
-              << scm_to_ssize_t(h) << std::endl;
+SCM_DEFINE (CreateAnimation, "ENGINE-create-animation", 5, 0, 0,
+            (SCM fname, SCM x, SCM y, SCM w, SCM h),
+            "Create an animation, "
+            "(fname x y keyframe-width keyframe-height)") {
+    // TODO....
+    return SCM_EOL;
 }
     
 void DoEngineAPIWrap() {
-    scm_c_define_gsubr("ENGINE-entity-create", 0, 0, 0, (void*)EntityCreate);
-    scm_c_define_gsubr("ENGINE-entity-remove", 0, 0, 0, (void*)EntityRemove);
-    scm_c_define_gsubr("ENGINE-entity-set-position", 3, 0, 0, (void*)EntitySetPosition);
-    scm_c_define_gsubr("ENGINE-is-running", 0, 0, 0, (void*)IsRunning);
-    scm_c_define_gsubr("ENGINE-timer-reset", 1, 0, 0, (void*)TimerReset);
-    scm_c_define_gsubr("ENGINE-timer-create", 0, 0, 0, (void*)TimerCreate);
-    scm_c_define_gsubr("ENGINE-load-animation", 5, 0, 0, (void*)LoadAnimation);
+    /* guile comes with a handy utility called guile-snarf
+     * that makes defining API functions easier (see SCM_DEFINES 
+     * above). When adding a new function, remember to run the 
+     * snarf script in the src dir. */
+#include "snarf.x"
 }
 }

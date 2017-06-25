@@ -6,7 +6,8 @@
 
 Engine::Engine() : m_window(sf::VideoMode(640, 480),
                             "BE",
-                            sf::Style::Default) {
+                            sf::Style::Default),
+                   m_uriCounters{} {
     m_window.setVerticalSyncEnabled(true);
 }
 
@@ -38,10 +39,19 @@ void Engine::Run(RunMode mode) {
     }
 }
 
+bool Engine::IsRunning() const {
+    return m_window.isOpen();
+}
+
 URI Engine::CreateEntity() {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
-    m_entities[++m_uriCounter] = {};
-    return m_uriCounter;
+    m_entities[m_uriCounters.entityCount] = std::make_shared<Entity>();
+    return m_uriCounters.entityCount++;
+}
+
+URI Engine::CreateTimer() {
+    m_timers[m_uriCounters.timerCount] = SteadyTimer{};
+    return m_uriCounters.timerCount++;
 }
 
 void Engine::RemoveEntity(URI id) {
@@ -58,15 +68,6 @@ Entity* Engine::GetEntityRaw(URI id) {
         return entity->second.get();
     }
     return nullptr;
-}
-
-bool Engine::IsRunning() const {
-    return m_window.isOpen();
-}
-
-URI Engine::CreateTimer() {
-    m_timers.emplace_back();
-    return m_timers.size() - 1;
 }
 
 USec Engine::ResetTimer(URI id) {
