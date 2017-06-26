@@ -3,7 +3,7 @@
 #include "Engine.hpp"
 #include "SchemeInterface.hpp"
 
-Engine::Engine() : m_window(sf::VideoMode(640, 480),
+Engine::Engine() : m_window(sf::VideoMode(480, 540),
                             "Engine",
                             sf::Style::Default),
                    m_uidCounters{} {
@@ -48,6 +48,14 @@ void Engine::Run(RunMode mode) {
         HandleTextureRequests();
         EventLoop();
         m_window.clear();
+        for (auto& entity : m_entities) {
+            if (auto animation = entity.second->GetAnimation()) {
+                auto keyframe =
+                    animation->GetKeyframe(entity.second->GetKeyframe());
+                keyframe.setPosition(entity.second->GetPosition());
+                m_window.draw(keyframe);
+            }
+        }
         m_window.display();
     }
 }
@@ -67,13 +75,20 @@ UID Engine::CreateTimer() {
     return m_uidCounters.timerCount++;
 }
 
-UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc) {
+UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc,
+                            const Vec2& origin) {
     auto req = std::make_shared<TextureLoadRequest>(sourceFile);
     EnqueueTextureRequest(req);
     m_animations[m_uidCounters.animationCount] = {
-        *req->GetResult(), frameDesc
+        *req->GetResult(), frameDesc, origin
     };
     return m_uidCounters.animationCount++;
+}
+
+UID Engine::CreateRNG() {
+    std::random_device rd;
+    m_rngs[m_uidCounters.rngCount] = std::mt19937(rd());
+    return m_uidCounters.rngCount++;
 }
 
 void Engine::RemoveEntity(UID id) {
@@ -92,9 +107,26 @@ Entity* Engine::GetEntityRaw(UID id) {
     return nullptr;
 }
 
+Animation* Engine::GetAnimationRaw(UID id) {
+    const auto animation = m_animations.find(id);
+    if (animation != m_animations.end()) {
+        return &animation->second;
+    }
+    return nullptr;
+}
+
 USec Engine::ResetTimer(UID id) {
-    if (id < m_timers.size()) {
-        return m_timers[id].Reset();
+    const auto timer = m_timers.find(id);
+    if (timer != m_timers.end()) {
+        return timer->second.Reset();
+    }
+    return 0;
+}
+
+std::mt19937::result_type Engine::GetRandom(UID id) {
+    const auto generator = m_rngs.find(id);
+    if (generator != m_rngs.end()) {
+        return generator->second();
     }
     return 0;
 }
