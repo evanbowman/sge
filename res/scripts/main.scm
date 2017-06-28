@@ -1,28 +1,65 @@
-(include "animations.scm")
+;;;
+;;; main.scm
+;;;
+;;; Entry point for the game, the engine starts executing
+;;; scripts by looking up and calling the symbol 'main'.
+;;;
+
+(define entities '())
+
+
 (include "math.scm")
-(include "world.scm")
-(include "astar.scm")
+(include "world-gen.scm")
+(include "player.scm")
+
+(define *game-state* (list 'startup))
+
+(define (logic-step dt)
+  (set! *game-state*
+    (case (car *game-state*)
+      ((startup)
+       ;; TODO...
+       (cons 'credits-screen 0))
+
+      ((credits-screen)
+       (let ((counter (cdr *game-state*)))
+         (cond
+          ((< counter 100000)
+           (display "credits entry")
+           (cons 'credits-screen (+ counter dt)))
+          ((and (>= counter 100000) (<= counter 200000))
+           (display "credits")
+           (cons 'credits-screen (+ counter dt)))
+          ((and (> counter 200000) (< counter 300000))
+           (display "credits exit")
+           (cons 'credits-screen (+ counter dt)))
+          (else
+           (list 'menu-level)))))
+      
+      ((menu-level)
+       (for-each (lambda (entity)
+                   (update-entity entity)) entities)
+       (list 'menu-level)))))
 
 (define (main)
-  (catch #t
-    (lambda ()
-      (logic-loop))
-    (lambda (key . parameters)
-      (format
-       (current-error-port)
-       "Uncaught throw to '~a: ~a\n"
-       key parameters))))
+  (logic-loop))
 
-(define delta-timer (timer-create))
+(define *delta-timer* (timer-create))
 
 (define (logic-loop)
   (cond
    ((not (eng-is-running?)) '())
    (else
-    (logic-step (timer-reset delta-timer))
+    (logic-step (timer-reset *delta-timer*))
     (logic-loop))))
 
-(define entities '())
+
+;;;; TEST ;;;;
+
+(define laika-run-anim
+  (animation-create
+   "game-objects.png"
+   391 253 36 32 18 16))
 
 (define (init-entities count)
   (define new-entity '())
@@ -44,19 +81,3 @@
                                ((> kf 3) 0)
                                (else (+ kf 1)))))
 
-(define (logic-step dt)
-  (define (update-entities entities)
-    (cond
-     ((not (null? entities))
-      (update-entity (car entities))
-      (update-entities (cdr entities)))
-     (else '())))
-  (update-entities entities)
-  ;; (define e1-pos (entity-get-position e1))
-  ;; (define e1-kf (entity-get-keyframe e1))
-  ;; (micro-sleep 50000)
-  ;; (entity-set-position e1 (- (car e1-pos) 5) (cdr e1-pos))
-  ;; (entity-set-keyframe e1 (cond
-  ;;                          ((> e1-kf 3) 0)
-  ;;                          (else (+ e1-kf 1))))
-  '())

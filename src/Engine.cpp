@@ -6,6 +6,7 @@
 Engine::Engine() : m_window(sf::VideoMode(480, 540),
                             "Engine",
                             sf::Style::Default),
+                   m_renderer(m_window),
                    m_uidCounters{} {
     m_window.setVerticalSyncEnabled(true);
 }
@@ -21,6 +22,9 @@ void Engine::EventLoop() {
     }
 }
 
+/* Note: EnqueueTextureRequest is called by an auxillary thread
+   in order to request Texture loading, which must happen on the main
+   thread. */
 void Engine::EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req) {
     std::lock_guard<std::mutex> lk(m_textureRequestMtx);
     m_textureRequests.push_back(req);
@@ -49,11 +53,8 @@ void Engine::Run(RunMode mode) {
         EventLoop();
         m_window.clear();
         for (auto& entity : m_entities) {
-            if (auto animation = entity.second->GetAnimation()) {
-                auto keyframe =
-                    animation->GetKeyframe(entity.second->GetKeyframe());
-                keyframe.setPosition(entity.second->GetPosition());
-                m_window.draw(keyframe);
+            if (auto gfx = entity.second->GetGraphicsComponent()) {
+                gfx->Display(*entity.second.get(), m_renderer);
             }
         }
         m_window.display();
@@ -85,10 +86,49 @@ UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc,
     return m_uidCounters.animationCount++;
 }
 
-UID Engine::CreateRNG() {
-    std::random_device rd;
-    m_rngs[m_uidCounters.rngCount] = std::mt19937(rd());
-    return m_uidCounters.rngCount++;
+void Engine::SetEntityAnimation(UID entity, UID animation) {
+    auto entityIter = FindEntityById(entity);
+    auto animationIter = m_animations.find(animation);
+    if (animationIter == m_animations.end()) {
+        throw "FIXME";
+    }
+    entityIter->second->SetGraphicsComponent({
+            std::make_unique<AnimationComponent>(&animationIter->second)
+        });
+}
+
+void Engine::SetEntityKeyframe(UID entity, size_t keyframe) {
+    auto entityIter = FindEntityById(entity);
+    auto gfxConf = entityIter->second->GetGraphicsComponent();
+    if (!gfxConf) {
+        throw "FIXME";
+    }
+    if (gfxConf->TypeId() != GraphicsComponent::Id::AnimationComponent) {
+        throw "FIXME";
+    }
+    reinterpret_cast<AnimationComponent*>(gfxConf)->SetKeyframe(keyframe);
+}
+
+void Engine::SetEntityPosition(UID entity, const Vec2& position) {
+    auto entityIter = FindEntityById(entity);
+    entityIter->second->SetPosition(position);
+}
+
+const Vec2& Engine::GetEntityPosition(UID entity) {
+    auto entityIter = FindEntityById(entity);
+    return entityIter->second->GetPosition();
+}
+
+size_t Engine::GetEntityKeyframe(UID entity) {
+    auto entityIter = FindEntityById(entity);
+    auto gfxConf = entityIter->second->GetGraphicsComponent();
+    if (!gfxConf) {
+        throw "FIXME";
+    }
+    if (gfxConf->TypeId() != GraphicsComponent::Id::AnimationComponent) {
+        throw "FIXME";
+    }
+    return reinterpret_cast<AnimationComponent*>(gfxConf)->GetKeyframe();
 }
 
 void Engine::RemoveEntity(UID id) {
@@ -99,34 +139,10 @@ void Engine::RemoveEntity(UID id) {
     }
 }
 
-Entity* Engine::GetEntityRaw(UID id) {
-    const auto entity = m_entities.find(id);
-    if (entity != m_entities.end()) {
-        return entity->second.get();
-    }
-    return nullptr;
-}
-
-Animation* Engine::GetAnimationRaw(UID id) {
-    const auto animation = m_animations.find(id);
-    if (animation != m_animations.end()) {
-        return &animation->second;
-    }
-    return nullptr;
-}
-
 USec Engine::ResetTimer(UID id) {
     const auto timer = m_timers.find(id);
     if (timer != m_timers.end()) {
         return timer->second.Reset();
-    }
-    return 0;
-}
-
-std::mt19937::result_type Engine::GetRandom(UID id) {
-    const auto generator = m_rngs.find(id);
-    if (generator != m_rngs.end()) {
-        return generator->second();
     }
     return 0;
 }
@@ -136,4 +152,12 @@ void Engine::RemoveTimer(UID id) {
     if (mapIter != m_timers.end()) {
         m_timers.erase(mapIter);
     }
+}
+
+Engine::EntityMap::iterator Engine::FindEntityById(UID id) {
+    auto entityIter = m_entities.find(id);
+    if (entityIter == m_entities.end()) {
+        throw "FIXME";
+    }
+    return entityIter;
 }

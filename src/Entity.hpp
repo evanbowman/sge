@@ -1,23 +1,19 @@
 #pragma once
 
-#include "BB.hpp"
+#include "GraphicsComponent.hpp"
 #include "Types.hpp"
-#include "Animation.hpp"
 
 class Entity {
 public:
-    Entity();
-    
+    using GraphicsCompRef = std::unique_ptr<GraphicsComponent>;
+
     const Vec2& GetPosition() const;
     void SetPosition(const Vec2& position);
-    Animation* GetAnimation();
-    void SetAnimation(Animation* animation);
-    size_t GetKeyframe() const;
-    void SetKeyframe(size_t keyframe);
+
+    void SetGraphicsComponent(GraphicsCompRef gfxComp);
+    GraphicsComponent* GetGraphicsComponent();
     
 private:
-    AABB m_bounds;
     Vec2 m_position;
-    Animation* m_animation;
-    size_t m_keyframe;
+    std::unique_ptr<GraphicsComponent> m_graphicsComponent;
 };
