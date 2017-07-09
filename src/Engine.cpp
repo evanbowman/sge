@@ -4,7 +4,7 @@
 #include "SchemeInterface.hpp"
 #include "Exceptions.hpp"
 
-Engine::Engine() : m_window(sf::VideoMode(480, 540),
+Engine::Engine() : m_window(sf::VideoMode(640, 540),
                             "Engine",
                             sf::Style::Default),
                    m_renderer(m_window),
@@ -52,7 +52,8 @@ void Engine::Run(RunMode mode) {
     while (m_window.isOpen()) {
         HandleTextureRequests();
         EventLoop();
-        m_window.clear();
+        static const auto clearIntensity = 100;
+        m_window.clear({clearIntensity, clearIntensity, clearIntensity});
         for (auto& entityNode : m_entities) {
             auto& entity = entityNode.second;
             if (entity->IsEnabled()) {

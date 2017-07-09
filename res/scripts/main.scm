@@ -10,23 +10,27 @@
 (include "player.scm")
 (include "level.scm")
 
-(define *delta-timer* (timer-create))
-
 (define (main)
   (logic-loop))
+
+(define *delta-timer* (timer-create))
+(define *logic-timer* (timer-create))
+(define *low-power-mode* #t)
 
 (define (logic-loop)
   (cond ((not (eng-is-running?)) '())
    (else
     (logic-step (timer-reset *delta-timer*))
+    (cond
+     (*low-power-mode*
+      (let ((logic-usec (timer-reset *logic-timer*)))
+        (micro-sleep (max 0 (- 2000 logic-usec))))))
     (logic-loop))))
 
-(set! *current-level* (Level))
-(*current-level* 'enter)
+(define *player* (Player))
+(*player* 'init)
 
-(define player (Player))
-(player 'init)
+(switch-level test-level)
 
 (define (logic-step dt)
-  (player 'update dt)
   (*current-level* 'update dt))

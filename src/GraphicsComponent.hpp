@@ -27,7 +27,7 @@ public:
     };
     virtual void Display(Entity& entity,
                          Renderer& renderer) = 0;
-    virtual Id TypeId() = 0;
+    virtual Id TypeId() const = 0;
     virtual ~GraphicsComponent() {}
 
     ZOrderIndex GetZOrder() const;
@@ -47,7 +47,7 @@ public:
 
     void Display(Entity& entity,
                  Renderer& renderer) override;
-    Id TypeId() final;
+    Id TypeId() const override;
 
     Sprite* GetSprite();
     
@@ -61,7 +61,7 @@ public:
     
     void Display(Entity& entity,
                  Renderer& renderer) override;
-    Id TypeId() final;
+    Id TypeId() const override;
 
     void SetKeyframe(size_t keyframe);
     size_t GetKeyframe() const;

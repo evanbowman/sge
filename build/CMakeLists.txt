@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.5)
 project(Engine)
 set(EXECUTABLE_NAME ${PROJECT_NAME})
 set(PROJECT_SOURCE_DIR "../src/")
-set(JSON_DIR "../deps/JSON")
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -25,7 +24,9 @@ endif()
 
 add_executable(${EXECUTABLE_NAME} WIN32 ${SOURCES})
 
-include_directories("${JSON_DIR}")
+# Because Box2D likes its root folder to be on the include path
+include_directories("${PROJECT_SOURCE_DIR}")
+
 if(APPLE)
   include(FindPkgConfig)
   pkg_search_module(GUILE REQUIRED guile-2.2)

@@ -32,7 +32,7 @@ Sprite* SpriteComponent::GetSprite() {
     return m_sprite;
 }
 
-GraphicsComponent::Id SpriteComponent::TypeId() {
+GraphicsComponent::Id SpriteComponent::TypeId() const {
     return Id::SpriteComponent;
 }
 
@@ -48,7 +48,7 @@ Animation* AnimationComponent::GetAnimation() {
     return m_animation;
 }
 
-GraphicsComponent::Id AnimationComponent::TypeId() {
+GraphicsComponent::Id AnimationComponent::TypeId() const {
     return Id::AnimationComponent;
 }
 

@@ -22,7 +22,7 @@
   (syntax-rules ()
     ((class name members methods ...)
      (define (name)
-       (let members
+       (let self members
            (lambda args
              (apply
               (case (car args)
