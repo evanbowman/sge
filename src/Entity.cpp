@@ -1,5 +1,7 @@
 #include "Entity.hpp"
 
+Entity::Entity() : m_enabled(true) {}
+
 const Vec2& Entity::GetPosition() const {
     return m_position;
 }
@@ -14,4 +16,12 @@ void Entity::SetGraphicsComponent(GraphicsCompRef gfxComp) {
 
 GraphicsComponent* Entity::GetGraphicsComponent() {
     return m_graphicsComponent.get();
+}
+
+void Entity::SetEnabled(bool enabled) {
+    m_enabled = enabled;
+}
+
+bool Entity::IsEnabled() const {
+    return m_enabled;
 }

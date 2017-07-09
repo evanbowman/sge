@@ -1,6 +1,25 @@
 #include "GraphicsComponent.hpp"
 #include "Renderer.hpp"
 
+GraphicsComponent::GraphicsComponent() : m_zOrder(0),
+                                         m_scale(1.f, 1.f) {}
+
+void GraphicsComponent::SetZOrder(ZOrderIndex zOrder) {
+    m_zOrder = zOrder;
+}
+
+ZOrderIndex GraphicsComponent::GetZOrder() const {
+    return m_zOrder;
+}
+
+void GraphicsComponent::SetScale(const Vec2& scale) {
+    m_scale = scale;
+}
+
+const Vec2& GraphicsComponent::GetScale() const {
+    return m_scale;
+}
+
 void SpriteComponent::Display(Entity& entity, Renderer& renderer) {
     renderer.Visit(entity, *this);
 }
@@ -38,3 +57,4 @@ AnimationComponent::AnimationComponent(Animation* animation) :
 
 SpriteComponent::SpriteComponent(Sprite* sprite) :
     m_sprite(sprite) {}
+

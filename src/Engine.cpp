@@ -2,6 +2,7 @@
 
 #include "Engine.hpp"
 #include "SchemeInterface.hpp"
+#include "Exceptions.hpp"
 
 Engine::Engine() : m_window(sf::VideoMode(480, 540),
                             "Engine",
@@ -52,9 +53,12 @@ void Engine::Run(RunMode mode) {
         HandleTextureRequests();
         EventLoop();
         m_window.clear();
-        for (auto& entity : m_entities) {
-            if (auto gfx = entity.second->GetGraphicsComponent()) {
-                gfx->Display(*entity.second.get(), m_renderer);
+        for (auto& entityNode : m_entities) {
+            auto& entity = entityNode.second;
+            if (entity->IsEnabled()) {
+                if (auto gfx = entity->GetGraphicsComponent()) {
+                    gfx->Display(*entity.get(), m_renderer);
+                }                
             }
         }
         m_window.display();
@@ -90,7 +94,7 @@ void Engine::SetEntityAnimation(UID entity, UID animation) {
     auto entityIter = FindEntityById(entity);
     auto animationIter = m_animations.find(animation);
     if (animationIter == m_animations.end()) {
-        throw "FIXME";
+        throw BadHandle(animation);
     }
     entityIter->second->SetGraphicsComponent({
             std::make_unique<AnimationComponent>(&animationIter->second)
@@ -112,6 +116,15 @@ void Engine::SetEntityKeyframe(UID entity, size_t keyframe) {
 void Engine::SetEntityPosition(UID entity, const Vec2& position) {
     auto entityIter = FindEntityById(entity);
     entityIter->second->SetPosition(position);
+}
+
+void Engine::SetEntityScale(UID entity, const Vec2& scale) {
+    auto entityIter = FindEntityById(entity);
+    auto gfxConf = entityIter->second->GetGraphicsComponent();
+    if (!gfxConf) {
+        throw "FIXME";
+    }
+    gfxConf->SetScale(scale);
 }
 
 const Vec2& Engine::GetEntityPosition(UID entity) {
@@ -157,7 +170,7 @@ void Engine::RemoveTimer(UID id) {
 Engine::EntityMap::iterator Engine::FindEntityById(UID id) {
     auto entityIter = m_entities.find(id);
     if (entityIter == m_entities.end()) {
-        throw "FIXME";
+        throw BadHandle(id);
     }
     return entityIter;
 }

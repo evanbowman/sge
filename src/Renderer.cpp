@@ -14,5 +14,6 @@ void Renderer::Visit(Entity& entity, SpriteComponent& comp) {
 void Renderer::Visit(Entity& entity, AnimationComponent& comp) {
     auto keyframe = comp.GetAnimation()->GetKeyframe(comp.GetKeyframe());
     keyframe.setPosition(entity.GetPosition());
+    keyframe.setScale(comp.GetScale());
     m_windowRef.draw(keyframe);
 }

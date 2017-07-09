@@ -9,7 +9,7 @@
    designed to be used with similarly typeless dynamic
    scripting languages like Scheme and Lua.
 
-   The engine does not deal with scripting language VM's
+   The engine does not deal with scripting language VMs
    in the currency of foreign objects, SMOBS, Userdata,
    or what have you, because these things are API specific,
    and rely on the a Script VM's garbage collector for
@@ -53,6 +53,7 @@ public:
     void SetEntityAnimation(UID entity, UID animation);
     void SetEntityKeyframe(UID entity, size_t keyframe);
     void SetEntityPosition(UID entity, const Vec2& position);
+    void SetEntityScale(UID entity, const Vec2& scale);
     const Vec2& GetEntityPosition(UID entity);
     size_t GetEntityKeyframe(UID entity);
     

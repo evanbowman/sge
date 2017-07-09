@@ -15,8 +15,12 @@ class Renderer;
 class Animation;
 class Entity;
 
+using ZOrderIndex = int;
+
 class GraphicsComponent {
 public:
+    GraphicsComponent();
+    
     enum class Id {
         SpriteComponent,
         AnimationComponent
@@ -25,6 +29,16 @@ public:
                          Renderer& renderer) = 0;
     virtual Id TypeId() = 0;
     virtual ~GraphicsComponent() {}
+
+    ZOrderIndex GetZOrder() const;
+    void SetZOrder(ZOrderIndex zOrder);
+
+    const Vec2& GetScale() const;
+    void SetScale(const Vec2& scale);
+    
+protected:
+    ZOrderIndex m_zOrder;
+    Vec2 m_scale;
 };
 
 class SpriteComponent : public GraphicsComponent {

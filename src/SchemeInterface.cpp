@@ -6,6 +6,7 @@
 #include "Engine.hpp"
 #include "Singleton.hpp"
 #include "ResourcePath.hpp"
+#include "Exceptions.hpp"
 
 namespace {
 void DoEngineAPIWrap();
@@ -36,17 +37,17 @@ void scheme::ScriptEntry() {
 namespace {
 auto& engine = Singleton<Engine>::Instance();
 
-static void ThrowMissingEntityError(const char* context) {
+static void SignalMissingEntityError(const char* context) {
     scm_error(scm_misc_error_key, context,
               "Entity id lookup failed", SCM_EOL, SCM_EOL);
 }
 
-static void ThrowMissingGraphicsComponentError(const char* context) {
+static void SignalMissingGraphicsComponentError(const char* context) {
     scm_error(scm_misc_error_key, context,
               "Entity has no graphics component", SCM_EOL, SCM_EOL);
 }
 
-static void ThrowComponentTypeMismatchError(const char* context,
+static void SignalComponentTypeMismatchError(const char* context,
                                             const char* expected) {
     scm_error(scm_misc_error_key, context,
               ("Component type does not match the expected " +
@@ -71,8 +72,8 @@ SCM_DEFINE (EntitySetPosition, "entity-set-position", 3, 0, 0,
             static_cast<float>(scm_to_double(x)),
             static_cast<float>(scm_to_double(y))
         });
-    } catch (...) {
-        ThrowMissingEntityError("entity-set-position");
+    } catch (BadHandle& bad) {
+        SignalMissingEntityError("entity-set-position");
     }
     return id;
 }
@@ -82,8 +83,8 @@ SCM_DEFINE (EntityGetPosition, "entity-get-position", 1, 0, 0,
     try {
         const auto& pos = engine.GetEntityPosition(scm_to_ssize_t(id));
         return scm_cons(scm_from_double(pos.x), scm_from_double(pos.y));
-    } catch (...) {
-        ThrowMissingEntityError("entity-get-position");
+    } catch (BadHandle& bad) {
+        SignalMissingEntityError("entity-get-position");
     }
     return SCM_EOL;
 }
@@ -94,8 +95,8 @@ SCM_DEFINE (EntitySetAnimation, "entity-set-animation", 2, 0, 0,
     try {
         engine.SetEntityAnimation(scm_to_ssize_t(entityId),
                                   scm_to_ssize_t(animId));
-    } catch (...) {
-        throw "FIXME";
+    } catch (BadHandle& bad) {
+        // TODO...
     }
     return entityId;
 }
@@ -106,8 +107,22 @@ SCM_DEFINE (EntitySetKeyframe, "entity-set-keyframe", 2, 0, 0,
     try {
         engine.SetEntityKeyframe(scm_to_ssize_t(id),
                                  scm_to_ssize_t(keyframe));
+    } catch (BadHandle& bad) {
+        SignalMissingEntityError("entity-set-keyframe");
+    }
+    return id;
+}
+
+SCM_DEFINE (EntitySetScale, "entity-set-scale", 3, 0, 0,
+            (SCM id, SCM xScale, SCM yScale),
+            "Set the scale factor for an entity\'s graphics component") {
+    try {
+        engine.SetEntityScale(scm_to_ssize_t(id), {
+                static_cast<float>(scm_to_double(xScale)),
+                static_cast<float>(scm_to_double(yScale))
+            });
     } catch (...) {
-        throw "FIXME";
+        // TODO...
     }
     return id;
 }
@@ -118,8 +133,8 @@ SCM_DEFINE (EntityGetKeyframe, "entity-get-keyframe", 1, 0, 0,
         const auto idAsNumber = scm_to_ssize_t(id);
         const auto keyframe = engine.GetEntityKeyframe(idAsNumber);
         return scm_from_ssize_t(keyframe);
-    } catch (...) {
-        throw "FIXME";
+    } catch (BadHandle& bad) {
+        SignalMissingEntityError("entity-get-keyframe");
     }
     return SCM_EOL;
 }

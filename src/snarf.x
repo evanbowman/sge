@@ -5,6 +5,7 @@ scm_c_define_gsubr (s_EntitySetPosition, 3, 0, 0, (scm_t_subr) EntitySetPosition
 scm_c_define_gsubr (s_EntityGetPosition, 1, 0, 0, (scm_t_subr) EntityGetPosition);;
 scm_c_define_gsubr (s_EntitySetAnimation, 2, 0, 0, (scm_t_subr) EntitySetAnimation);;
 scm_c_define_gsubr (s_EntitySetKeyframe, 2, 0, 0, (scm_t_subr) EntitySetKeyframe);;
+scm_c_define_gsubr (s_EntitySetScale, 3, 0, 0, (scm_t_subr) EntitySetScale);;
 scm_c_define_gsubr (s_EntityGetKeyframe, 1, 0, 0, (scm_t_subr) EntityGetKeyframe);;
 scm_c_define_gsubr (s_IsRunning, 0, 0, 0, (scm_t_subr) IsRunning);;
 scm_c_define_gsubr (s_TimerCreate, 0, 0, 0, (scm_t_subr) TimerCreate);;
