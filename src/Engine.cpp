@@ -4,9 +4,9 @@
 #include "SchemeInterface.hpp"
 #include "Exceptions.hpp"
 
-Engine::Engine() : m_window(sf::VideoMode(640, 540),
+Engine::Engine() : m_window(sf::VideoMode(720, 450),
                             "Engine",
-                            sf::Style::Default),
+                            sf::Style::Fullscreen),
                    m_renderer(m_window),
                    m_camera(m_window),
                    m_uidCounters{} {
