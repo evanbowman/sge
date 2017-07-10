@@ -128,6 +128,15 @@ void Engine::SetEntityScale(UID entity, const Vec2& scale) {
     gfxConf->SetScale(scale);
 }
 
+void Engine::SetCameraTarget(UID entity) {
+    auto entityIter = FindEntityById(entity);
+    m_camera.SetTarget(entityIter->second);
+}
+
+void Engine::SetCameraSpringiness(float springiness) {
+    m_camera.SetSpringiness(springiness);
+}
+
 const Vec2& Engine::GetEntityPosition(UID entity) {
     auto entityIter = FindEntityById(entity);
     return entityIter->second->GetPosition();

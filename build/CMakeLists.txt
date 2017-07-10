@@ -24,9 +24,6 @@ endif()
 
 add_executable(${EXECUTABLE_NAME} WIN32 ${SOURCES})
 
-# Because Box2D likes its root folder to be on the include path
-include_directories("${PROJECT_SOURCE_DIR}")
-
 if(APPLE)
   include(FindPkgConfig)
   pkg_search_module(GUILE REQUIRED guile-2.2)

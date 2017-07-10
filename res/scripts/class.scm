@@ -4,18 +4,8 @@
 ;;; A class in the game's code is really just a convenience
 ;;; macro for grouping functions with data. It doesn't support
 ;;; inheritance or dynamically adding methods at runtime or
-;;; anything like that.
-;;;
-;;; Example usage:
-;;;
-;;; (class example
-;;;   ((my-var 1))                       ; Member var list
-;;;
-;;;   ((incr) (lambda (x)                ; Method definition
-;;;      (set! my-var (+ x my-var)))))
-;;;
-;;; (define ex (example))                ; instantiate class
-;;; (ex 'incr 42)                        ; my-var is now 43
+;;; anything like that (it could pretty easily but I didn't
+;;; need those features so I didn't implement them).
 ;;;
 
 (define-syntax class

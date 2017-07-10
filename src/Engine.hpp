@@ -23,6 +23,7 @@
 
 #include "Animation.hpp"
 #include "Entity.hpp"
+#include "Camera.hpp"
 #include "Types.hpp"
 #include "Timer.hpp"
 #include "TextureManager.hpp"
@@ -54,6 +55,9 @@ public:
     void SetEntityKeyframe(UID entity, size_t keyframe);
     void SetEntityPosition(UID entity, const Vec2& position);
     void SetEntityScale(UID entity, const Vec2& scale);
+    void SetCameraTarget(UID entity);
+    void SetCameraSpringiness(float springiness);
+    
     const Vec2& GetEntityPosition(UID entity);
     size_t GetEntityKeyframe(UID entity);
     
@@ -81,6 +85,7 @@ private:
     EntityMap m_entities;
     TimerMap m_timers;
     AnimationMap m_animations;
+    Camera m_camera;
 
     struct UIDCounters {
         UID entityCount;

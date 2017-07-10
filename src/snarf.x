@@ -14,3 +14,5 @@ scm_c_define_gsubr (s_TimerRemove, 1, 0, 0, (scm_t_subr) TimerRemove);;
 scm_c_define_gsubr (s_MicroSleep, 1, 0, 0, (scm_t_subr) MicroSleep);;
 scm_c_define_gsubr (s_KeyPressed, 1, 0, 0, (scm_t_subr) KeyPressed);;
 scm_c_define_gsubr (s_AnimationCreate, 7, 0, 0, (scm_t_subr) AnimationCreate);;
+scm_c_define_gsubr (s_CameraSetTarget, 1, 0, 0, (scm_t_subr) CameraSetTarget);;
+scm_c_define_gsubr (s_CameraSetSpringiness, 1, 0, 0, (scm_t_subr) CameraSetSpringiness);;

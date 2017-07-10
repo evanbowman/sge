@@ -161,7 +161,7 @@ SCM_DEFINE (TimerRemove, "timer-remove", 1, 0, 0,
 }
 
 SCM_DEFINE (MicroSleep, "micro-sleep", 1, 0, 0,
-            (SCM usecs), "Seep for a number of microseconds. Integers please.") {
+            (SCM usecs), "Sleep for a number of microseconds. Integers please.") {
     std::this_thread::sleep_for(std::chrono::microseconds(scm_to_uint(usecs)));
     return SCM_EOL;
 }
@@ -176,7 +176,7 @@ SCM_DEFINE (KeyPressed, "key-pressed?", 1, 0, 0,
 SCM_DEFINE (AnimationCreate, "animation-create", 7, 0, 0,
             (SCM fname, SCM x, SCM y, SCM w, SCM h, SCM ox, SCM oy),
             "Create an animation, "
-            "(fname x y keyframe-width keyframe-height)") {
+            "(fname x y keyframe-width keyframe-height).") {
     return scm_from_ssize_t(
                 engine.CreateAnimation(scm_to_latin1_string(fname), {
                         scm_to_int(x), scm_to_int(y),
@@ -186,6 +186,24 @@ SCM_DEFINE (AnimationCreate, "animation-create", 7, 0, 0,
                         static_cast<float>(scm_to_double(ox)),
                         static_cast<float>(scm_to_double(oy))
                     }));
+}
+   
+SCM_DEFINE (CameraSetTarget, "camera-set-target", 1, 0, 0,
+            (SCM entity),
+            "Set camera target to an entity.") {
+    try {
+        engine.SetCameraTarget(scm_to_ssize_t(entity));
+    } catch (BadHandle& bad) {
+        SignalMissingEntityError("entity-set-position");
+    }
+    return SCM_EOL;
+}
+
+SCM_DEFINE (CameraSetSpringiness, "camera-set-springiness", 1, 0, 0,
+            (SCM springiness),
+            "Set the camera\'s elasticity when following its target.") {
+    engine.SetCameraSpringiness(static_cast<float>(scm_to_double(springiness)));
+    return SCM_EOL;
 }
 
 void ProvideKeymap() {

@@ -30,6 +30,9 @@
 (define *player* (Player))
 (*player* 'init)
 
+(camera-set-target (*player* 'get-handle))
+(camera-set-springiness 0.5)
+
 (switch-level test-level)
 
 (define (logic-step dt)
