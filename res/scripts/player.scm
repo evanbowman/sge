@@ -23,9 +23,7 @@
    (x-pos 0)
    (y-pos 0)
    (x-speed 0.0)
-   (y-speed 0.0)
-   (health 5)
-   (x-accel-counter 0))
+   (y-speed 0.0))
 
   ((init)
    (lambda ()
@@ -42,11 +40,12 @@
      (set! y-pos y)
      (set! x-speed 0)
      (set! y-speed 0)
-     (set! health 5)
-     (set! x-accel-counter 0)
      (set! state 'idle)
      (set! keyframe 0)
      (entity-set-keyframe entity-handle 0)))
+
+  ((get-position)
+   (lambda () (cons x-pos y-pos)))
   
   ((update)
    (lambda (dt)
@@ -62,7 +61,6 @@
          (entity-set-keyframe entity-handle keyframe))
         (else (set! anim-timer (+ anim-timer dt))))
        (set! x-speed (lerp (* 0.6 (sgn x-speed)) x-speed (* dt 0.0000025))))
-     (set! x-accel-counter (+ x-accel-counter dt))
      
      (case state
        ((run-left)

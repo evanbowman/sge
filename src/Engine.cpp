@@ -8,6 +8,7 @@ Engine::Engine() : m_window(sf::VideoMode(640, 540),
                             "Engine",
                             sf::Style::Default),
                    m_renderer(m_window),
+                   m_camera(m_window),
                    m_uidCounters{} {
     m_window.setVerticalSyncEnabled(true);
 }
@@ -49,11 +50,13 @@ void Engine::Run(RunMode mode) {
     });
     // Note: the guile interpreter never returns
     logicThread.detach();
+    SteadyTimer gfxDeltaTimer;
     while (m_window.isOpen()) {
         HandleTextureRequests();
         EventLoop();
         static const auto clearIntensity = 100;
         m_window.clear({clearIntensity, clearIntensity, clearIntensity});
+        m_camera.Update(gfxDeltaTimer.Reset());
         for (auto& entityNode : m_entities) {
             auto& entity = entityNode.second;
             if (entity->IsEnabled()) {

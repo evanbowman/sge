@@ -31,7 +31,7 @@
 (*player* 'init)
 
 (camera-set-target (*player* 'get-handle))
-(camera-set-springiness 0.5)
+(camera-set-springiness 10)
 
 (switch-level test-level)
 
