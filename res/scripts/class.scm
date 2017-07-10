@@ -1,11 +1,8 @@
 ;;;
 ;;; class.scm
 ;;;
-;;; A class in the game's code is really just a convenience
-;;; macro for grouping functions with data. It doesn't support
-;;; inheritance or dynamically adding methods at runtime or
-;;; anything like that (it could pretty easily but I didn't
-;;; need those features so I didn't implement them).
+;;; A class in the game's code is just a convenience
+;;; macro for grouping functions with data.
 ;;;
 
 (define-syntax class
