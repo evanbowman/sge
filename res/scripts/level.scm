@@ -44,8 +44,21 @@
     (new-level 'enter)
     old-level))
 
-(define test-level (Level))
 
-(test-level 'add-entry-hook
-            (lambda ()
-              (*player* 'reset-with-position 200 300)))
+
+(define apartment-0 (Level))
+
+(define apt-0-bkg-anim
+  (animation-create
+   "apartment-level-0.png"
+   0 0 193 144 0 0))
+
+(apartment-0
+ 'add-entry-hook
+ (lambda ()
+   (define bkg (entity-create))
+   (entity-set-animation bkg apt-0-bkg-anim)
+   (entity-set-scale bkg 2 2)
+   (entity-set-position bkg 0 62)
+   (apartment-0 'add-entity bkg)
+   (*player* 'reset-with-position 60 300)))

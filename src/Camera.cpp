@@ -19,10 +19,14 @@ template <typename T> T lerp(const T & A, const T & B, const float t) {
 
 void Camera::Update(USec dt) {
     if (auto targetSp = m_target.lock()) {
-        const auto& pos = targetSp->GetPosition();
+        const auto& targetPos = targetSp->GetPosition();
         const auto& center = m_view.getCenter();
-        m_view.setCenter(lerp(pos, center,
-                              dt * 0.000025 * (1.f / m_springiness)));
+        if (m_springiness != 0.f) {
+            m_view.setCenter(lerp(targetPos, center,
+                                  dt * 0.000025 * (1.f / m_springiness)));
+        } else {
+            m_view.setCenter(targetPos);
+        }
         m_window.setView(m_view);
     }
 }

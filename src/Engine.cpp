@@ -4,12 +4,13 @@
 #include "SchemeInterface.hpp"
 #include "Exceptions.hpp"
 
-Engine::Engine() : m_window(sf::VideoMode(720, 450),
+Engine::Engine() : m_window(sf::VideoMode::getDesktopMode(),
                             "Engine",
                             sf::Style::Fullscreen),
                    m_renderer(m_window),
                    m_camera(m_window),
                    m_uidCounters{} {
+    m_window.setMouseCursorVisible(false);
     m_window.setVerticalSyncEnabled(true);
 }
 
@@ -54,8 +55,7 @@ void Engine::Run(RunMode mode) {
     while (m_window.isOpen()) {
         HandleTextureRequests();
         EventLoop();
-        static const auto clearIntensity = 100;
-        m_window.clear({clearIntensity, clearIntensity, clearIntensity});
+        m_window.clear({20, 20, 54});
         m_camera.Update(gfxDeltaTimer.Reset());
         for (auto& entityNode : m_entities) {
             auto& entity = entityNode.second;
@@ -129,6 +129,15 @@ void Engine::SetEntityScale(UID entity, const Vec2& scale) {
         throw "FIXME";
     }
     gfxConf->SetScale(scale);
+}
+
+void Engine::SetEntityBlendMode(UID entity, const sf::BlendMode& blendMode) {
+    auto entityIter = FindEntityById(entity);
+    auto gfxConf = entityIter->second->GetGraphicsComponent();
+    if (!gfxConf) {
+        throw "FIXME";
+    }
+    gfxConf->GetRenderStates().blendMode = blendMode;
 }
 
 void Engine::SetCameraTarget(UID entity) {

@@ -4,6 +4,10 @@
 GraphicsComponent::GraphicsComponent() : m_zOrder(0),
                                          m_scale(1.f, 1.f) {}
 
+sf::RenderStates& GraphicsComponent::GetRenderStates() {
+    return m_renderStates;
+}
+
 void GraphicsComponent::SetZOrder(ZOrderIndex zOrder) {
     m_zOrder = zOrder;
 }
@@ -20,20 +24,8 @@ const Vec2& GraphicsComponent::GetScale() const {
     return m_scale;
 }
 
-void SpriteComponent::Display(Entity& entity, Renderer& renderer) {
-    renderer.Visit(entity, *this);
-}
-
 void AnimationComponent::Display(Entity& entity, Renderer& renderer) {
     renderer.Visit(entity, *this);
-}
-
-Sprite* SpriteComponent::GetSprite() {
-    return m_sprite;
-}
-
-GraphicsComponent::Id SpriteComponent::TypeId() const {
-    return Id::SpriteComponent;
 }
 
 void AnimationComponent::SetKeyframe(size_t keyframe) {
@@ -54,7 +46,3 @@ GraphicsComponent::Id AnimationComponent::TypeId() const {
 
 AnimationComponent::AnimationComponent(Animation* animation) :
     m_keyframe(0), m_animation(animation) {}
-
-SpriteComponent::SpriteComponent(Sprite* sprite) :
-    m_sprite(sprite) {}
-

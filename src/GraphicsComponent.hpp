@@ -10,7 +10,6 @@
 
 #include "Types.hpp"
 
-class Sprite;
 class Renderer;
 class Animation;
 class Entity;
@@ -22,7 +21,6 @@ public:
     GraphicsComponent();
     
     enum class Id {
-        SpriteComponent,
         AnimationComponent
     };
     virtual void Display(Entity& entity,
@@ -35,24 +33,13 @@ public:
 
     const Vec2& GetScale() const;
     void SetScale(const Vec2& scale);
+
+    sf::RenderStates& GetRenderStates();
     
 protected:
+    sf::RenderStates m_renderStates;
     ZOrderIndex m_zOrder;
     Vec2 m_scale;
-};
-
-class SpriteComponent : public GraphicsComponent {
-public:
-    explicit SpriteComponent(Sprite* sprite);
-
-    void Display(Entity& entity,
-                 Renderer& renderer) override;
-    Id TypeId() const override;
-
-    Sprite* GetSprite();
-    
-private:
-    Sprite* m_sprite;
 };
 
 class AnimationComponent : public GraphicsComponent {

@@ -55,6 +55,7 @@ public:
     void SetEntityKeyframe(UID entity, size_t keyframe);
     void SetEntityPosition(UID entity, const Vec2& position);
     void SetEntityScale(UID entity, const Vec2& scale);
+    void SetEntityBlendMode(UID entity, const sf::BlendMode& blendMode);
     void SetCameraTarget(UID entity);
     void SetCameraSpringiness(float springiness);
     

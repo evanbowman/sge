@@ -33,7 +33,7 @@
 (camera-set-target (*player* 'get-handle))
 (camera-set-springiness 2)
 
-(switch-level test-level)
+(switch-level apartment-0)
 
 (define (logic-step dt)
   (*current-level* 'update dt))
