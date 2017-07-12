@@ -6,7 +6,7 @@
 class Entity {
 public:
     using GraphicsCompRef = std::unique_ptr<GraphicsComponent>;
-
+    
     Entity();
     
     const Vec2& GetPosition() const;

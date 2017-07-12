@@ -24,7 +24,7 @@ const Vec2& GraphicsComponent::GetScale() const {
     return m_scale;
 }
 
-void AnimationComponent::Display(Entity& entity, Renderer& renderer) {
+void AnimationComponent::Dispatch(Entity& entity, Renderer& renderer) {
     renderer.Visit(entity, *this);
 }
 

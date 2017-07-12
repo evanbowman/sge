@@ -9,6 +9,7 @@
 (include "math.scm")
 (include "player.scm")
 (include "level.scm")
+(include "wall.scm")
 
 (define (main)
   (logic-loop))

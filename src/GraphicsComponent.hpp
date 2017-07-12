@@ -14,8 +14,6 @@ class Renderer;
 class Animation;
 class Entity;
 
-using ZOrderIndex = int;
-
 class GraphicsComponent {
 public:
     GraphicsComponent();
@@ -23,8 +21,8 @@ public:
     enum class Id {
         AnimationComponent
     };
-    virtual void Display(Entity& entity,
-                         Renderer& renderer) = 0;
+    virtual void Dispatch(Entity& entity,
+                          Renderer& renderer) = 0;
     virtual Id TypeId() const = 0;
     virtual ~GraphicsComponent() {}
 
@@ -46,8 +44,8 @@ class AnimationComponent : public GraphicsComponent {
 public:
     explicit AnimationComponent(Animation* animation);
     
-    void Display(Entity& entity,
-                 Renderer& renderer) override;
+    void Dispatch(Entity& entity,
+                  Renderer& renderer) override;
     Id TypeId() const override;
 
     void SetKeyframe(size_t keyframe);

@@ -56,21 +56,23 @@ public:
     void SetEntityPosition(UID entity, const Vec2& position);
     void SetEntityScale(UID entity, const Vec2& scale);
     void SetEntityBlendMode(UID entity, const sf::BlendMode& blendMode);
+    void SetEntityZOrder(UID entity, ZOrderIndex zOrder);
     void SetCameraTarget(UID entity);
     void SetCameraSpringiness(float springiness);
     
     const Vec2& GetEntityPosition(UID entity);
     size_t GetEntityKeyframe(UID entity);
     
-    void RemoveEntity(UID id);
-    void RemoveTimer(UID id);
+    void RemoveEntity(UID entity);
+    void RemoveTimer(UID timer);
     
-    USec ResetTimer(UID id);
+    USec ResetTimer(UID timer);
     
 private:
     void EventLoop();
 
-    EntityMap::iterator FindEntityById(UID id);
+    EntityMap::iterator FindEntity(UID entity);
+    GraphicsComponent& FindGfxComp(UID entity);
     
     void EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req);
     void HandleTextureRequests();

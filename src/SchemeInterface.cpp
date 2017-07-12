@@ -35,6 +35,10 @@ void scheme::ScriptEntry() {
 }
 
 namespace {
+inline UID UIDCast(SCM uidAsScm) {
+    return scm_to_ssize_t(uidAsScm);
+}
+    
 auto& engine = Singleton<Engine>::Instance();
 
 static void SignalMissingEntityError(const char* context) {
@@ -60,28 +64,28 @@ SCM_DEFINE (EntityCreate, "entity-create", 0, 0, 0,
 }
 
 SCM_DEFINE (EntityRemove, "entity-remove", 1, 0, 0,
-            (SCM id), "Remove an entity.") {
-    engine.RemoveEntity(scm_to_ssize_t(id));
+            (SCM entity), "Remove an entity.") {
+    engine.RemoveEntity(UIDCast(entity));
     return SCM_EOL;
 }
 
 SCM_DEFINE (EntitySetPosition, "entity-set-position", 3, 0, 0,
-            (SCM id, SCM x, SCM y), "Set an entity\'s position.") {
+            (SCM entity, SCM x, SCM y), "Set an entity\'s position.") {
     try {
-        engine.SetEntityPosition(scm_to_ssize_t(id), {
+        engine.SetEntityPosition(UIDCast(entity), {
             static_cast<float>(scm_to_double(x)),
             static_cast<float>(scm_to_double(y))
         });
     } catch (BadHandle& bad) {
         SignalMissingEntityError("entity-set-position");
     }
-    return id;
+    return entity;
 }
 
 SCM_DEFINE (EntityGetPosition, "entity-get-position", 1, 0, 0,
-            (SCM id), "Get an entity\'s position.") {
+            (SCM entity), "Get an entity\'s position.") {
     try {
-        const auto& pos = engine.GetEntityPosition(scm_to_ssize_t(id));
+        const auto& pos = engine.GetEntityPosition(UIDCast(entity));
         return scm_cons(scm_from_double(pos.x), scm_from_double(pos.y));
     } catch (BadHandle& bad) {
         SignalMissingEntityError("entity-get-position");
@@ -90,48 +94,85 @@ SCM_DEFINE (EntityGetPosition, "entity-get-position", 1, 0, 0,
 }
 
 SCM_DEFINE (EntitySetAnimation, "entity-set-animation", 2, 0, 0,
-            (SCM entityId, SCM animId),
+            (SCM entity, SCM animation),
             "Set a keyframe sequence representation for an entity.") {
     try {
-        engine.SetEntityAnimation(scm_to_ssize_t(entityId),
-                                  scm_to_ssize_t(animId));
+        engine.SetEntityAnimation(UIDCast(entity),
+                                  scm_to_ssize_t(animation));
     } catch (BadHandle& bad) {
         // TODO...
     }
-    return entityId;
+    return entity;
 }
 
 SCM_DEFINE (EntitySetKeyframe, "entity-set-keyframe", 2, 0, 0,
-            (SCM id, SCM keyframe),
+            (SCM entity, SCM keyframe),
             "Set the keyframe for an entity\'s animation.") {
     try {
-        engine.SetEntityKeyframe(scm_to_ssize_t(id),
+        engine.SetEntityKeyframe(UIDCast(entity),
                                  scm_to_ssize_t(keyframe));
     } catch (BadHandle& bad) {
         SignalMissingEntityError("entity-set-keyframe");
     }
-    return id;
+    return entity;
 }
 
 SCM_DEFINE (EntitySetScale, "entity-set-scale", 3, 0, 0,
-            (SCM id, SCM xScale, SCM yScale),
+            (SCM entity, SCM xScale, SCM yScale),
             "Set the scale factor for an entity\'s graphics component") {
     try {
-        engine.SetEntityScale(scm_to_ssize_t(id), {
+        engine.SetEntityScale(UIDCast(entity), {
                 static_cast<float>(scm_to_double(xScale)),
                 static_cast<float>(scm_to_double(yScale))
             });
     } catch (...) {
         // TODO...
     }
-    return id;
+    return entity;
 }
 
-SCM_DEFINE (EntityGetKeyframe, "entity-get-keyframe", 1, 0, 0,
-            (SCM id), "Get the keyframe for an entity\'s animation.") {
+SCM_DEFINE (EntitySetZOrder, "entity-set-zorder", 2, 0, 0,
+            (SCM entity, SCM zOrder),
+            "Set an entity\'s zorder index.") {
     try {
-        const auto idAsNumber = scm_to_ssize_t(id);
-        const auto keyframe = engine.GetEntityKeyframe(idAsNumber);
+        engine.SetEntityZOrder(UIDCast(entity), scm_to_int(zOrder));
+    } catch (...) {
+        // TODO...
+    }
+    return entity;
+}
+    
+enum {
+    BlendAdd,
+    BlendNone,
+    BlendAlpha,
+    BlendMultiply
+};
+    
+SCM_DEFINE (EntitySetBlendMode, "entity-set-blend-mode", 2, 0, 0,
+            (SCM entity, SCM blendMode),
+            "Set an entitiy\'s blend mode.") {
+    try {
+        static const std::unordered_map<unsigned, sf::BlendMode> modes {
+            {BlendAdd, sf::BlendAdd},
+            {BlendNone, sf::BlendNone},
+            {BlendAlpha, sf::BlendAlpha},
+            {BlendMultiply, sf::BlendMultiply}, 
+        };
+        auto mode = modes.find(scm_to_int(blendMode));
+        if (mode != modes.end()) {
+            engine.SetEntityBlendMode(UIDCast(entity), mode->second);
+        }
+    } catch (...) {
+        // TODO...
+    }
+    return entity;
+}
+    
+SCM_DEFINE (EntityGetKeyframe, "entity-get-keyframe", 1, 0, 0,
+            (SCM entity), "Get the keyframe for an entity\'s animation.") {
+    try {
+        const auto keyframe = engine.GetEntityKeyframe(UIDCast(entity));
         return scm_from_ssize_t(keyframe);
     } catch (BadHandle& bad) {
         SignalMissingEntityError("entity-get-keyframe");
@@ -150,13 +191,13 @@ SCM_DEFINE (TimerCreate, "timer-create", 0, 0, 0,
 }
 
 SCM_DEFINE (TimerReset, "timer-reset", 1, 0, 0,
-            (SCM id), "Create a timer.") {
-    return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(id)));
+            (SCM timer), "Create a timer.") {
+    return scm_from_ssize_t(engine.ResetTimer(scm_to_ssize_t(timer)));
 }
 
 SCM_DEFINE (TimerRemove, "timer-remove", 1, 0, 0,
-            (SCM id), "Remove a timer.") {
-    engine.RemoveTimer(scm_to_ssize_t(id));
+            (SCM timer), "Remove a timer.") {
+    engine.RemoveTimer(scm_to_ssize_t(timer));
     return SCM_EOL;
 }
 
@@ -192,7 +233,7 @@ SCM_DEFINE (CameraSetTarget, "camera-set-target", 1, 0, 0,
             (SCM entity),
             "Set camera target to an entity.") {
     try {
-        engine.SetCameraTarget(scm_to_ssize_t(entity));
+        engine.SetCameraTarget(UIDCast(entity));
     } catch (BadHandle& bad) {
         SignalMissingEntityError("entity-set-position");
     }
@@ -205,7 +246,14 @@ SCM_DEFINE (CameraSetSpringiness, "camera-set-springiness", 1, 0, 0,
     engine.SetCameraSpringiness(static_cast<float>(scm_to_double(springiness)));
     return SCM_EOL;
 }
-
+   
+void ProvideBlendModes() {
+    scm_c_define("blend-add", scm_from_int(BlendAdd));
+    scm_c_define("blend-none", scm_from_int(BlendNone));
+    scm_c_define("blend-alpha", scm_from_int(BlendAlpha));
+    scm_c_define("blend-multiply", scm_from_int(BlendMultiply));
+}
+    
 void ProvideKeymap() {
 #define MAP_KEY(FROM, TO) \
     scm_c_define(TO, scm_from_uint(static_cast<int>(FROM)));
@@ -318,6 +366,7 @@ void DoEngineAPIWrap() {
      * above). When adding a new function, remember to run the 
      * snarf script in the src dir. */
 #include "snarf.x"
+    ProvideBlendModes();
     ProvideKeymap();
 }
 

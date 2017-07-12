@@ -55,17 +55,16 @@ void Engine::Run(RunMode mode) {
     while (m_window.isOpen()) {
         HandleTextureRequests();
         EventLoop();
-        m_window.clear({20, 20, 54});
         m_camera.Update(gfxDeltaTimer.Reset());
         for (auto& entityNode : m_entities) {
             auto& entity = entityNode.second;
             if (entity->IsEnabled()) {
                 if (auto gfx = entity->GetGraphicsComponent()) {
-                    gfx->Display(*entity.get(), m_renderer);
-                }                
+                    gfx->Dispatch(*entity.get(), m_renderer);
+                }      
             }
         }
-        m_window.display();
+        m_renderer.Display();
     }
 }
 
@@ -95,7 +94,7 @@ UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc,
 }
 
 void Engine::SetEntityAnimation(UID entity, UID animation) {
-    auto entityIter = FindEntityById(entity);
+    auto entityIter = FindEntity(entity);
     auto animationIter = m_animations.find(animation);
     if (animationIter == m_animations.end()) {
         throw BadHandle(animation);
@@ -106,42 +105,32 @@ void Engine::SetEntityAnimation(UID entity, UID animation) {
 }
 
 void Engine::SetEntityKeyframe(UID entity, size_t keyframe) {
-    auto entityIter = FindEntityById(entity);
-    auto gfxConf = entityIter->second->GetGraphicsComponent();
-    if (!gfxConf) {
+    auto& gfxComp = FindGfxComp(entity);
+    if (gfxComp.TypeId() != GraphicsComponent::Id::AnimationComponent) {
         throw "FIXME";
     }
-    if (gfxConf->TypeId() != GraphicsComponent::Id::AnimationComponent) {
-        throw "FIXME";
-    }
-    reinterpret_cast<AnimationComponent*>(gfxConf)->SetKeyframe(keyframe);
+    reinterpret_cast<AnimationComponent&>(gfxComp).SetKeyframe(keyframe);
 }
 
 void Engine::SetEntityPosition(UID entity, const Vec2& position) {
-    auto entityIter = FindEntityById(entity);
+    auto entityIter = FindEntity(entity);
     entityIter->second->SetPosition(position);
 }
 
 void Engine::SetEntityScale(UID entity, const Vec2& scale) {
-    auto entityIter = FindEntityById(entity);
-    auto gfxConf = entityIter->second->GetGraphicsComponent();
-    if (!gfxConf) {
-        throw "FIXME";
-    }
-    gfxConf->SetScale(scale);
+    FindGfxComp(entity).SetScale(scale);
 }
 
 void Engine::SetEntityBlendMode(UID entity, const sf::BlendMode& blendMode) {
-    auto entityIter = FindEntityById(entity);
-    auto gfxConf = entityIter->second->GetGraphicsComponent();
-    if (!gfxConf) {
-        throw "FIXME";
-    }
-    gfxConf->GetRenderStates().blendMode = blendMode;
+    FindGfxComp(entity).GetRenderStates().blendMode = blendMode;
+}
+
+void Engine::SetEntityZOrder(UID entity, ZOrderIndex zOrder) {
+    FindGfxComp(entity).SetZOrder(zOrder);
 }
 
 void Engine::SetCameraTarget(UID entity) {
-    auto entityIter = FindEntityById(entity);
+    auto entityIter = FindEntity(entity);
     m_camera.SetTarget(entityIter->second);
 }
 
@@ -150,12 +139,12 @@ void Engine::SetCameraSpringiness(float springiness) {
 }
 
 const Vec2& Engine::GetEntityPosition(UID entity) {
-    auto entityIter = FindEntityById(entity);
+    auto entityIter = FindEntity(entity);
     return entityIter->second->GetPosition();
 }
 
 size_t Engine::GetEntityKeyframe(UID entity) {
-    auto entityIter = FindEntityById(entity);
+    auto entityIter = FindEntity(entity);
     auto gfxConf = entityIter->second->GetGraphicsComponent();
     if (!gfxConf) {
         throw "FIXME";
@@ -166,33 +155,42 @@ size_t Engine::GetEntityKeyframe(UID entity) {
     return reinterpret_cast<AnimationComponent*>(gfxConf)->GetKeyframe();
 }
 
-void Engine::RemoveEntity(UID id) {
+void Engine::RemoveEntity(UID entity) {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
-    auto mapIter = m_entities.find(id);
+    auto mapIter = m_entities.find(entity);
     if (mapIter != m_entities.end()) {
         m_entities.erase(mapIter);
     }
 }
 
-USec Engine::ResetTimer(UID id) {
-    const auto timer = m_timers.find(id);
-    if (timer != m_timers.end()) {
-        return timer->second.Reset();
+USec Engine::ResetTimer(UID timer) {
+    const auto timerIter = m_timers.find(timer);
+    if (timerIter != m_timers.end()) {
+        return timerIter->second.Reset();
     }
     return 0;
 }
 
-void Engine::RemoveTimer(UID id) {
-    auto mapIter = m_timers.find(id);
+void Engine::RemoveTimer(UID timer) {
+    auto mapIter = m_timers.find(timer);
     if (mapIter != m_timers.end()) {
         m_timers.erase(mapIter);
     }
 }
 
-Engine::EntityMap::iterator Engine::FindEntityById(UID id) {
-    auto entityIter = m_entities.find(id);
+Engine::EntityMap::iterator Engine::FindEntity(UID entity) {
+    auto entityIter = m_entities.find(entity);
     if (entityIter == m_entities.end()) {
-        throw BadHandle(id);
+        throw BadHandle(entity);
     }
     return entityIter;
+}
+
+GraphicsComponent& Engine::FindGfxComp(UID entity) {
+    auto entityIter = FindEntity(entity);
+    if (auto gfxConf = entityIter->second->GetGraphicsComponent()) {
+        return *gfxConf;
+    } else {
+        throw "Entity missing graphics component";
+    }
 }

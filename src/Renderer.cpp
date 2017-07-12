@@ -5,15 +5,24 @@
 
 Renderer::Renderer(sf::RenderWindow& window) : m_windowRef(window) {}
 
-void Renderer::Visit(Entity& entity, SpriteComponent& comp) {
-    // TODO
-}
-
-#include <iostream>
-
 void Renderer::Visit(Entity& entity, AnimationComponent& comp) {
     auto keyframe = comp.GetAnimation()->GetKeyframe(comp.GetKeyframe());
     keyframe.setPosition(entity.GetPosition());
     keyframe.setScale(comp.GetScale());
-    m_windowRef.draw(keyframe, comp.GetRenderStates());
+    m_drawList.push_back({
+        keyframe, comp.GetRenderStates(), comp.GetZOrder()
+    });
+}
+
+void Renderer::Display() {
+    std::sort(m_drawList.begin(), m_drawList.end(),
+              [](const auto& lhs, const auto& rhs) {
+                  return lhs.zOrder < rhs.zOrder;
+              });
+    m_windowRef.clear({20, 20, 54});
+    for (auto& element : m_drawList) {
+        m_windowRef.draw(element.sprite, element.renderStates);
+    }
+    m_windowRef.display();
+    m_drawList.clear();
 }
