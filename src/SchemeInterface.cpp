@@ -159,10 +159,12 @@ SCM_DEFINE (EntitySetBlendMode, "entity-set-blend-mode", 2, 0, 0,
             {BlendAlpha, sf::BlendAlpha},
             {BlendMultiply, sf::BlendMultiply}, 
         };
-        auto mode = modes.find(scm_to_int(blendMode));
-        if (mode != modes.end()) {
-            engine.SetEntityBlendMode(UIDCast(entity), mode->second);
+        auto modeIter = modes.find(scm_to_int(blendMode));
+        auto mode = sf::BlendNone;
+        if (modeIter != modes.end()) {
+            mode = modeIter->second;
         }
+        engine.SetEntityBlendMode(UIDCast(entity), mode);
     } catch (...) {
         // TODO...
     }
@@ -185,6 +187,13 @@ SCM_DEFINE (IsRunning, "eng-is-running?", 0, 0, 0,
     return scm_from_bool(engine.IsRunning());
 }
 
+SCM_DEFINE (GetWindowSize, "window-size", 0, 0, 0,
+            (), "Get the size of the game window in pixels.") {
+    auto size = engine.GetWindowSize();
+    return scm_cons(scm_from_uint(size.x),
+                    scm_from_uint(size.y));
+}
+    
 SCM_DEFINE (TimerCreate, "timer-create", 0, 0, 0,
             (), "Create a timer.") {
     return scm_from_ssize_t(engine.CreateTimer());
@@ -244,6 +253,13 @@ SCM_DEFINE (CameraSetSpringiness, "camera-set-springiness", 1, 0, 0,
             (SCM springiness),
             "Set the camera\'s elasticity when following its target.") {
     engine.SetCameraSpringiness(static_cast<float>(scm_to_double(springiness)));
+    return SCM_EOL;
+}
+
+SCM_DEFINE (CameraSetZoom, "camera-set-zoom", 1, 0, 0,
+            (SCM zoom),
+            "Zoom the camera to a fraction of the window size.") {
+    engine.SetCameraZoom(static_cast<float>(scm_to_double(zoom)));
     return SCM_EOL;
 }
    

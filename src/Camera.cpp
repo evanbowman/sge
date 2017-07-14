@@ -27,6 +27,12 @@ void Camera::Update(USec dt) {
         } else {
             m_view.setCenter(targetPos);
         }
-        m_window.setView(m_view);
     }
+    m_window.setView(m_view);
+}
+
+void Camera::SetZoom(float zoom) {
+    const auto& windowSize = m_window.getSize();
+    m_view.setSize({ windowSize.x * (1.f / zoom),
+                     windowSize.y * (1.f / zoom) });
 }

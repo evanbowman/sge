@@ -19,6 +19,7 @@ public:
     GraphicsComponent();
     
     enum class Id {
+        SpriteComponent,
         AnimationComponent
     };
     virtual void Dispatch(Entity& entity,

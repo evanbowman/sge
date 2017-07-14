@@ -12,6 +12,7 @@ public:
     void Update(USec dt);
     void SetSpringiness(float springiness);
     const Vec2& GetCenter() const;
+    void SetZoom(float zoom);
     
 private:
     sf::RenderWindow& m_window;

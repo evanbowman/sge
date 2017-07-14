@@ -28,7 +28,7 @@ void Engine::EventLoop() {
 /* Note: EnqueueTextureRequest is called by an auxillary thread
    in order to request Texture loading, which must happen on the main
    thread. */
-void Engine::EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req) {
+void Engine::EnqueueTextureRequest(std::shared_ptr<TextureRequest> req) {
     std::lock_guard<std::mutex> lk(m_textureRequestMtx);
     m_textureRequests.push_back(req);
 }
@@ -72,6 +72,10 @@ bool Engine::IsRunning() const {
     return m_window.isOpen();
 }
 
+UIVec2 Engine::GetWindowSize() const {
+    return m_window.getSize();
+}
+
 UID Engine::CreateEntity() {
     std::lock_guard<std::mutex> lock(m_entitiesMtx);
     m_entities[m_uidCounters.entityCount] = std::make_shared<Entity>();
@@ -85,7 +89,7 @@ UID Engine::CreateTimer() {
 
 UID Engine::CreateAnimation(std::string sourceFile, const Rect& frameDesc,
                             const Vec2& origin) {
-    auto req = std::make_shared<TextureLoadRequest>(sourceFile);
+    auto req = std::make_shared<TextureRequest>(sourceFile);
     EnqueueTextureRequest(req);
     m_animations[m_uidCounters.animationCount] = {
         *req->GetResult(), frameDesc, origin
@@ -136,6 +140,10 @@ void Engine::SetCameraTarget(UID entity) {
 
 void Engine::SetCameraSpringiness(float springiness) {
     m_camera.SetSpringiness(springiness);
+}
+
+void Engine::SetCameraZoom(float zoom) {
+    m_camera.SetZoom(zoom);
 }
 
 const Vec2& Engine::GetEntityPosition(UID entity) {

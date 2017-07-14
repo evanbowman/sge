@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
 
-class TextureLoadRequest {
+class TextureRequest {
 public:
-    explicit TextureLoadRequest(const std::string& fileName);
+    explicit TextureRequest(const std::string& fileName);
     friend class TextureManager;
     sf::Texture* GetResult();
 private:
@@ -16,9 +16,9 @@ private:
 
 class TextureManager {
 public:
-    void Accept(TextureLoadRequest& req);
+    void Accept(TextureRequest& req);
     
 private:
-    sf::Texture& GetTexture(const std::string& fileName);
+    sf::Texture& LoadTexture(const std::string& fileName);
     std::unordered_map<std::string, sf::Texture> m_textures;
 };

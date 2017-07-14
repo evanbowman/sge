@@ -23,3 +23,6 @@
 
 (define (distance x1 y1 x2 y2)
   (sqrt (+ (expt (- x2 x1) 2) (expt (- y2 y1) 2))))
+
+(define (sgn num)
+  (if (> num 0) 1.0 -1.0))

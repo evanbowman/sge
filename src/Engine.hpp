@@ -44,6 +44,8 @@ public:
     
     void Run(RunMode mode);
     bool IsRunning() const;
+
+    UIVec2 GetWindowSize() const;
     
     UID CreateEntity();
     UID CreateTimer();
@@ -59,6 +61,7 @@ public:
     void SetEntityZOrder(UID entity, ZOrderIndex zOrder);
     void SetCameraTarget(UID entity);
     void SetCameraSpringiness(float springiness);
+    void SetCameraZoom(float zoom);
     
     const Vec2& GetEntityPosition(UID entity);
     size_t GetEntityKeyframe(UID entity);
@@ -74,7 +77,7 @@ private:
     EntityMap::iterator FindEntity(UID entity);
     GraphicsComponent& FindGfxComp(UID entity);
     
-    void EnqueueTextureRequest(std::shared_ptr<TextureLoadRequest> req);
+    void EnqueueTextureRequest(std::shared_ptr<TextureRequest> req);
     void HandleTextureRequests();
 
     sf::RenderWindow m_window;
@@ -83,7 +86,7 @@ private:
     std::mutex m_entitiesMtx;
     TextureManager m_textureMgr;
     std::mutex m_textureRequestMtx;
-    std::vector<std::shared_ptr<TextureLoadRequest>> m_textureRequests;
+    std::vector<std::shared_ptr<TextureRequest>> m_textureRequests;
     
     EntityMap m_entities;
     TimerMap m_timers;

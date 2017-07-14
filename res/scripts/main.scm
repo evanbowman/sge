@@ -32,7 +32,8 @@
 (*player* 'init)
 
 (camera-set-target (*player* 'get-handle))
-(camera-set-springiness 2)
+(camera-set-springiness 1.5)
+(camera-set-zoom 2)
 
 (switch-level apartment-0)
 
