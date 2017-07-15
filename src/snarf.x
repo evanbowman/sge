@@ -12,6 +12,7 @@ scm_c_define_gsubr (s_EntitySetColor, 5, 0, 0, (scm_t_subr) EntitySetColor);;
 scm_c_define_gsubr (s_EntityGetKeyframe, 1, 0, 0, (scm_t_subr) EntityGetKeyframe);;
 scm_c_define_gsubr (s_IsRunning, 0, 0, 0, (scm_t_subr) IsRunning);;
 scm_c_define_gsubr (s_GetWindowSize, 0, 0, 0, (scm_t_subr) GetWindowSize);;
+scm_c_define_gsubr (s_BackgroundSetColor, 4, 0, 0, (scm_t_subr) BackgroundSetColor);;
 scm_c_define_gsubr (s_TimerCreate, 0, 0, 0, (scm_t_subr) TimerCreate);;
 scm_c_define_gsubr (s_TimerReset, 1, 0, 0, (scm_t_subr) TimerReset);;
 scm_c_define_gsubr (s_TimerRemove, 1, 0, 0, (scm_t_subr) TimerRemove);;

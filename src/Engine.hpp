@@ -44,7 +44,9 @@ public:
     
     void Run(RunMode mode);
     bool IsRunning() const;
-
+    
+    void SetRefreshColor(const Color& color);
+    
     UIVec2 GetWindowSize() const;
     
     UID CreateEntity();
@@ -85,6 +87,8 @@ private:
     sf::RenderWindow m_window;
     Renderer m_renderer;
 
+    Color m_refreshColor;
+    
     std::mutex m_entitiesMtx;
     TextureManager m_textureMgr;
     std::mutex m_textureRequestMtx;

@@ -54,6 +54,8 @@
    (define fg (entity-create))
    (define sunbeam-0 (entity-create))
    (define sunbeam-1 (entity-create))
+   (set-refresh-rgba 20 20 54 255)
+   (entity-set-rgba (*player* 'get-handle) 255 255 255 128)
    (entity-set-animation bkg anim-apt-0-bkg)
    (entity-set-animation sunbeam-0 anim-sunbeam-0)
    (entity-set-animation sunbeam-1 anim-sunbeam-1)

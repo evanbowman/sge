@@ -1,7 +1,8 @@
 #include "GraphicsComponent.hpp"
 #include "Renderer.hpp"
 
-GraphicsComponent::GraphicsComponent() : m_zOrder(0),
+GraphicsComponent::GraphicsComponent() : m_color(255, 255, 255, 255),
+                                         m_zOrder(0),
                                          m_scale(1.f, 1.f) {}
 
 RenderStates& GraphicsComponent::GetRenderStates() {

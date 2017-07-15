@@ -21,7 +21,7 @@
 (define *low-power-mode* #t)
 
 (define (logic-loop)
-  (cond ((not (eng-is-running?)) '())
+  (cond ((not (engine-is-running?)) '())
    (else
     (logic-step (timer-reset *delta-timer*))
     (cond

@@ -64,12 +64,18 @@ void Engine::Run(RunMode mode) {
                 }      
             }
         }
+        m_window.clear(m_refreshColor);
         m_renderer.Display();
+        m_window.display();
     }
 }
 
 bool Engine::IsRunning() const {
     return m_window.isOpen();
+}
+
+void Engine::SetRefreshColor(const Color& color) {
+    m_refreshColor = color;
 }
 
 UIVec2 Engine::GetWindowSize() const {

@@ -176,11 +176,11 @@ SCM_DEFINE (EntitySetColor, "entity-set-rgba", 5, 0, 0,
             "Set an entity\'s color.") {
     try {
         engine.SetEntityColor(UIDCast(entity), {
-                scm_to_uint8(r),
-                scm_to_uint8(g),
-                scm_to_uint8(b),
-                scm_to_uint8(a)
-            });
+            scm_to_uint8(r),
+            scm_to_uint8(g),
+            scm_to_uint8(b),
+            scm_to_uint8(a)
+        });
     } catch (...) {
         // ... 
     }
@@ -198,7 +198,7 @@ SCM_DEFINE (EntityGetKeyframe, "entity-get-keyframe", 1, 0, 0,
     return SCM_EOL;
 }
     
-SCM_DEFINE (IsRunning, "eng-is-running?", 0, 0, 0,
+SCM_DEFINE (IsRunning, "engine-is-running?", 0, 0, 0,
             (), "Check whether the engine is running.") {
     return scm_from_bool(engine.IsRunning());
 }
@@ -208,6 +208,22 @@ SCM_DEFINE (GetWindowSize, "window-size", 0, 0, 0,
     auto size = engine.GetWindowSize();
     return scm_cons(scm_from_uint(size.x),
                     scm_from_uint(size.y));
+}
+
+SCM_DEFINE (BackgroundSetColor, "set-refresh-rgba", 4, 0, 0,
+            (SCM r, SCM g, SCM b, SCM a),
+            "Set the refresh color of the window.") {
+    try {
+        engine.SetRefreshColor({
+            scm_to_uint8(r),
+            scm_to_uint8(g),
+            scm_to_uint8(b),
+            scm_to_uint8(a)
+        });
+    } catch (...) {
+        // ... 
+    }
+    return SCM_EOL;
 }
     
 SCM_DEFINE (TimerCreate, "timer-create", 0, 0, 0,
