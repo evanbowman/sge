@@ -7,11 +7,6 @@
 ;;; be pretty easy to follow how it works.
 ;;;
 
-(define player-run-cycle
-  (animation-create
-   "player-run-cycle.png"
-   0 0 21 44 10 20))
-
 (class Player
   ((entity-handle (entity-create))
    (anim-timer 0)
@@ -24,8 +19,7 @@
 
   ((init)
    (lambda ()
-     (entity-set-animation entity-handle player-run-cycle)
-     (entity-set-position entity-handle 0 0)))
+     (entity-set-animation entity-handle anim-player-run)))
 
   ((get-handle)
    (lambda () entity-handle))
@@ -38,6 +32,7 @@
      (set! y-speed 0)
      (set! state 'idle)
      (set! keyframe 0)
+     (entity-set-animation entity-handle anim-player-run)
      (entity-set-keyframe entity-handle 0)))
 
   ((get-position)
@@ -60,22 +55,31 @@
      
      (case state
        ((run-left)
-        (run-impl key-left))
+        (run-impl mapped-key-left))
 
        ((run-right)
-        (run-impl key-right))
+        (run-impl mapped-key-right))
        
        ((idle)
         (cond
-         ((key-pressed? key-left)
+         ((key-pressed? mapped-key-left)
           (set! state 'run-left)
           (set! x-speed -0.01)
           (entity-set-scale entity-handle -1.0 1.0))
-         ((key-pressed? key-right)
+         ((key-pressed? mapped-key-right)
           (set! state 'run-right)
           (set! x-speed 0.01)
           (entity-set-scale entity-handle 1.0 1.0)))
         (set! x-speed (lerp 0.000 x-speed (* dt 0.000015))))
+
+       ((sitting)
+        '())
+
+       ((sit-down)
+        '())
+
+       ((stand-up)
+        '())
        
        ((jumping)
         '()))

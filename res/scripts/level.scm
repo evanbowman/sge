@@ -44,20 +44,6 @@
     (new-level 'enter)
     old-level))
 
-(define apt-0-bkg-anim
-  (animation-create
-   "apartment-level-0.png"
-   0 0 193 144 0 0))
-
-(define sunbeam-0-anim
-  (animation-create
-   "sunbeam-0.png"
-   0 0 96 99 0 0))
-
-(define sunbeam-1-anim
-  (animation-create
-   "sunbeam-1.png"
-   0 0 43 44 0 0))
 
 (define apartment-0 (Level))
 
@@ -65,18 +51,24 @@
  'add-entry-hook
  (lambda ()
    (define bkg (entity-create))
+   (define fg (entity-create))
    (define sunbeam-0 (entity-create))
    (define sunbeam-1 (entity-create))
-   (entity-set-animation bkg apt-0-bkg-anim)
-   (entity-set-animation sunbeam-0 sunbeam-0-anim)
-   (entity-set-animation sunbeam-1 sunbeam-1-anim)
+   (entity-set-animation bkg anim-apt-0-bkg)
+   (entity-set-animation sunbeam-0 anim-sunbeam-0)
+   (entity-set-animation sunbeam-1 anim-sunbeam-1)
+   (entity-set-animation fg anim-apt-0-fg)
    (entity-set-zorder sunbeam-0 1)
    (entity-set-zorder sunbeam-1 1)
+   (entity-set-zorder fg 1)
    (entity-set-blend-mode sunbeam-0 blend-add)
    (entity-set-blend-mode sunbeam-1 blend-add)
    (entity-set-position sunbeam-0 97 18)
-   (entity-set-position sunbeam-1 150 80)
+   (entity-set-position sunbeam-1 150 66)
+   (entity-set-position fg -15 -16)
    (apartment-0 'add-entity bkg)
    (apartment-0 'add-entity sunbeam-0)
    (apartment-0 'add-entity sunbeam-1)
-   (*player* 'reset-with-position 87 119)))
+   (apartment-0 'add-entity fg)
+   (*player* 'reset-with-position 87 119)
+   (camera-set-center 87 119)))

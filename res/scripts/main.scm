@@ -10,6 +10,8 @@
 (include "player.scm")
 (include "level.scm")
 (include "wall.scm")
+(include "controls.scm")
+(include "animations.scm")
 
 (define (main)
   (logic-loop))

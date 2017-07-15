@@ -8,6 +8,7 @@ scm_c_define_gsubr (s_EntitySetKeyframe, 2, 0, 0, (scm_t_subr) EntitySetKeyframe
 scm_c_define_gsubr (s_EntitySetScale, 3, 0, 0, (scm_t_subr) EntitySetScale);;
 scm_c_define_gsubr (s_EntitySetZOrder, 2, 0, 0, (scm_t_subr) EntitySetZOrder);;
 scm_c_define_gsubr (s_EntitySetBlendMode, 2, 0, 0, (scm_t_subr) EntitySetBlendMode);;
+scm_c_define_gsubr (s_EntitySetColor, 5, 0, 0, (scm_t_subr) EntitySetColor);;
 scm_c_define_gsubr (s_EntityGetKeyframe, 1, 0, 0, (scm_t_subr) EntityGetKeyframe);;
 scm_c_define_gsubr (s_IsRunning, 0, 0, 0, (scm_t_subr) IsRunning);;
 scm_c_define_gsubr (s_GetWindowSize, 0, 0, 0, (scm_t_subr) GetWindowSize);;
@@ -18,5 +19,6 @@ scm_c_define_gsubr (s_MicroSleep, 1, 0, 0, (scm_t_subr) MicroSleep);;
 scm_c_define_gsubr (s_KeyPressed, 1, 0, 0, (scm_t_subr) KeyPressed);;
 scm_c_define_gsubr (s_AnimationCreate, 7, 0, 0, (scm_t_subr) AnimationCreate);;
 scm_c_define_gsubr (s_CameraSetTarget, 1, 0, 0, (scm_t_subr) CameraSetTarget);;
+scm_c_define_gsubr (s_CameraSetCenter, 2, 0, 0, (scm_t_subr) CameraSetCenter);;
 scm_c_define_gsubr (s_CameraSetSpringiness, 1, 0, 0, (scm_t_subr) CameraSetSpringiness);;
 scm_c_define_gsubr (s_CameraSetZoom, 1, 0, 0, (scm_t_subr) CameraSetZoom);;

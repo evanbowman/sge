@@ -4,7 +4,7 @@
 GraphicsComponent::GraphicsComponent() : m_zOrder(0),
                                          m_scale(1.f, 1.f) {}
 
-sf::RenderStates& GraphicsComponent::GetRenderStates() {
+RenderStates& GraphicsComponent::GetRenderStates() {
     return m_renderStates;
 }
 
@@ -22,6 +22,14 @@ void GraphicsComponent::SetScale(const Vec2& scale) {
 
 const Vec2& GraphicsComponent::GetScale() const {
     return m_scale;
+}
+
+const Color& GraphicsComponent::GetColor() const {
+    return m_color;
+}
+
+void GraphicsComponent::SetColor(const Color& color) {
+    m_color = color;
 }
 
 void AnimationComponent::Dispatch(Entity& entity, Renderer& renderer) {

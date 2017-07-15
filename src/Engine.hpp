@@ -59,7 +59,9 @@ public:
     void SetEntityScale(UID entity, const Vec2& scale);
     void SetEntityBlendMode(UID entity, const sf::BlendMode& blendMode);
     void SetEntityZOrder(UID entity, ZOrderIndex zOrder);
+    void SetEntityColor(UID entity, const Color& color);
     void SetCameraTarget(UID entity);
+    void SetCameraCenter(const Vec2& center);
     void SetCameraSpringiness(float springiness);
     void SetCameraZoom(float zoom);
     

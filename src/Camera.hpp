@@ -12,6 +12,7 @@ public:
     void Update(USec dt);
     void SetSpringiness(float springiness);
     const Vec2& GetCenter() const;
+    void SetCenter(const Vec2& center);
     void SetZoom(float zoom);
     
 private:

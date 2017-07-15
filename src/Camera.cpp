@@ -31,6 +31,10 @@ void Camera::Update(USec dt) {
     m_window.setView(m_view);
 }
 
+void Camera::SetCenter(const Vec2& center) {
+    m_view.setCenter(center);
+}
+
 void Camera::SetZoom(float zoom) {
     const auto& windowSize = m_window.getSize();
     m_view.setSize({ windowSize.x * (1.f / zoom),

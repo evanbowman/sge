@@ -133,9 +133,17 @@ void Engine::SetEntityZOrder(UID entity, ZOrderIndex zOrder) {
     FindGfxComp(entity).SetZOrder(zOrder);
 }
 
+void Engine::SetEntityColor(UID entity, const Color& color) {
+    FindGfxComp(entity).SetColor(color);
+}
+
 void Engine::SetCameraTarget(UID entity) {
     auto entityIter = FindEntity(entity);
     m_camera.SetTarget(entityIter->second);
+}
+
+void Engine::SetCameraCenter(const Vec2& center) {
+    m_camera.SetCenter(center);
 }
 
 void Engine::SetCameraSpringiness(float springiness) {

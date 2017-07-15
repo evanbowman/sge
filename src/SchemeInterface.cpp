@@ -170,6 +170,22 @@ SCM_DEFINE (EntitySetBlendMode, "entity-set-blend-mode", 2, 0, 0,
     }
     return entity;
 }
+
+SCM_DEFINE (EntitySetColor, "entity-set-rgba", 5, 0, 0,
+            (SCM entity, SCM r, SCM g, SCM b, SCM a),
+            "Set an entity\'s color.") {
+    try {
+        engine.SetEntityColor(UIDCast(entity), {
+                scm_to_uint8(r),
+                scm_to_uint8(g),
+                scm_to_uint8(b),
+                scm_to_uint8(a)
+            });
+    } catch (...) {
+        // ... 
+    }
+    return entity;
+}
     
 SCM_DEFINE (EntityGetKeyframe, "entity-get-keyframe", 1, 0, 0,
             (SCM entity), "Get the keyframe for an entity\'s animation.") {
@@ -249,6 +265,16 @@ SCM_DEFINE (CameraSetTarget, "camera-set-target", 1, 0, 0,
     return SCM_EOL;
 }
 
+SCM_DEFINE (CameraSetCenter, "camera-set-center", 2, 0, 0,
+            (SCM x, SCM y),
+            "Manually set the camera\'s center. This procedure has occasional"
+            " uses, but better to set the camera\'s center by making it track an"
+            " entity with camera-set-target") {
+    engine.SetCameraCenter({ static_cast<float>(scm_to_double(x)),
+                             static_cast<float>(scm_to_double(y)) });
+    return SCM_EOL;
+}
+    
 SCM_DEFINE (CameraSetSpringiness, "camera-set-springiness", 1, 0, 0,
             (SCM springiness),
             "Set the camera\'s elasticity when following its target.") {

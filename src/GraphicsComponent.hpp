@@ -19,7 +19,6 @@ public:
     GraphicsComponent();
     
     enum class Id {
-        SpriteComponent,
         AnimationComponent
     };
     virtual void Dispatch(Entity& entity,
@@ -30,13 +29,17 @@ public:
     ZOrderIndex GetZOrder() const;
     void SetZOrder(ZOrderIndex zOrder);
 
+    const Color& GetColor() const;
+    void SetColor(const Color& color);
+    
     const Vec2& GetScale() const;
     void SetScale(const Vec2& scale);
 
-    sf::RenderStates& GetRenderStates();
+    RenderStates& GetRenderStates();
     
 protected:
-    sf::RenderStates m_renderStates;
+    RenderStates m_renderStates;
+    Color m_color;
     ZOrderIndex m_zOrder;
     Vec2 m_scale;
 };
