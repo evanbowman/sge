@@ -10,13 +10,14 @@
 
 namespace {
 void DoEngineAPIWrap();
-static const auto entryScriptPath = ResourcePath() + "scripts/main.scm";
 }
 
 void scheme::REPLEntry() {
     std::pair<int, char**> dummyArgs{};
     scm_boot_guile(dummyArgs.first, dummyArgs.second,
                    [](void* closure, int argc, char** argv) {
+                       static const auto entryScriptPath =
+                           ResourcePath() + "scripts/main.scm";
                        DoEngineAPIWrap();
                        scm_c_primitive_load(entryScriptPath.c_str());
                        scm_shell(argc, argv);
@@ -27,6 +28,8 @@ void scheme::ScriptEntry() {
     std::pair<int, char**> dummyArgs{};
     scm_boot_guile(dummyArgs.first, dummyArgs.second,
                    [](void* closure, int argc, char** argv) {
+                       static const auto entryScriptPath =
+                           ResourcePath() + "scripts/main.scm";
                        DoEngineAPIWrap();
                        scm_c_primitive_load(entryScriptPath.c_str());
                        SCM func = scm_variable_ref(scm_c_lookup("main"));

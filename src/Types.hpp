@@ -8,6 +8,7 @@ using IVec2 = sf::Vector2<int>;
 using UIVec2 = sf::Vector2<unsigned>;
 using Color = sf::Color;
 using RenderStates = sf::RenderStates;
+using String = std::string;
 using Rect = sf::IntRect;
 using USec = std::chrono::microseconds::rep;
 using UID = size_t;
