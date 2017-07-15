@@ -71,7 +71,6 @@ void ConfigureResourcePath(const std::string& path) {
 
 const std::string& ResourcePath() {
     if (!cachedPath.second) {
-        throw std::runtime_error("here!?");
         cachedPath.first = DefaultPathImpl();
         cachedPath.second = true;
     }
