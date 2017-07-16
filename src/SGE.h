@@ -31,6 +31,7 @@ extern "C" {
     void SGE_SetCameraCenter(SGE_Vec2 center);
     void SGE_SetCameraSpringiness(float springiness);
     void SGE_SetCameraZoom(float zoom);
+    SGE_Vec2 SGE_GetCameraViewSize();
 
     SGE_Bool SGE_CreateTimer(SGE_UUID* timer);
     SGE_Bool SGE_ResetTimer(SGE_UUID timer, SGE_USec* elapsed);

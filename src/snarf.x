@@ -2,6 +2,8 @@
 scm_c_define_gsubr (s_EntityCreate, 0, 0, 0, (scm_t_subr) EntityCreate);;
 scm_c_define_gsubr (s_EntityRemove, 1, 0, 0, (scm_t_subr) EntityRemove);;
 scm_c_define_gsubr (s_EntitySetPosition, 3, 0, 0, (scm_t_subr) EntitySetPosition);;
+scm_c_define_gsubr (s_EntityAddAttribute, 2, 0, 0, (scm_t_subr) EntityAddAttribute);;
+scm_c_define_gsubr (s_EntityRemoveAttribute, 2, 0, 0, (scm_t_subr) EntityRemoveAttribute);;
 scm_c_define_gsubr (s_EntityGetPosition, 1, 0, 0, (scm_t_subr) EntityGetPosition);;
 scm_c_define_gsubr (s_EntitySetAnimation, 2, 0, 0, (scm_t_subr) EntitySetAnimation);;
 scm_c_define_gsubr (s_EntitySetKeyframe, 2, 0, 0, (scm_t_subr) EntitySetKeyframe);;
@@ -23,3 +25,4 @@ scm_c_define_gsubr (s_CameraSetTarget, 1, 0, 0, (scm_t_subr) CameraSetTarget);;
 scm_c_define_gsubr (s_CameraSetCenter, 2, 0, 0, (scm_t_subr) CameraSetCenter);;
 scm_c_define_gsubr (s_CameraSetSpringiness, 1, 0, 0, (scm_t_subr) CameraSetSpringiness);;
 scm_c_define_gsubr (s_CameraSetZoom, 1, 0, 0, (scm_t_subr) CameraSetZoom);;
+scm_c_define_gsubr (s_CameraGetViewSize, 0, 0, 0, (scm_t_subr) CameraGetViewSize);;

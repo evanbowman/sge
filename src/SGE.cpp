@@ -309,6 +309,12 @@ extern "C" {
         g_engine.camera.SetZoom(zoom);
     }
 
+    SGE_Vec2 SGE_GetCameraViewSize() {
+        const auto& view = g_engine.camera.GetView();
+        const auto& viewSize = view.getSize();
+        return { viewSize.x, viewSize.y };
+    }
+
     SGE_Bool SGE_CreateTimer(SGE_UUID* timer) {
         g_engine.uidCounter++;
         g_engine.timers[g_engine.uidCounter] = SteadyTimer{};

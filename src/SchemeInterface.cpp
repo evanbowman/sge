@@ -70,6 +70,24 @@ SCM_DEFINE (EntitySetPosition, "sge-entity-set-position", 3, 0, 0,
     return entity;
 }
 
+SCM_DEFINE (EntityAddAttribute, "sge-entity-add-attrib", 2, 0, 0,
+            (SCM entity, SCM attrib), "Add an attribute to an Entity.") {
+    if (!SGE_AddEntityAttribute(UUIDCast(entity),
+                                (SGE_Attribute)scm_to_int(attrib))) {
+        // ...
+    }
+    return entity;
+}
+
+SCM_DEFINE (EntityRemoveAttribute, "sge-entity-remove-attrib", 2, 0, 0,
+            (SCM entity, SCM attrib), "Remove an attribute from an Entity.") {
+    if (!SGE_RemoveEntityAttribute(UUIDCast(entity),
+                                   (SGE_Attribute)scm_to_int(attrib))) {
+        // ...
+    }
+    return entity;
+}
+    
 SCM_DEFINE (EntityGetPosition, "sge-entity-get-position", 1, 0, 0,
             (SCM entity), "Get an entity\'s position.") {
     SGE_Vec2 pos;
@@ -258,9 +276,16 @@ SCM_DEFINE (CameraSetZoom, "sge-camera-set-zoom", 1, 0, 0,
     return SCM_EOL;
 }
 
+SCM_DEFINE (CameraGetViewSize, "sge-camera-get-view-size", 0, 0, 0,
+            (SCM zoom),
+            "Get the camera\'s view size.") {
+    auto viewSize = SGE_GetCameraViewSize();
+    return scm_cons(scm_from_double(viewSize.x), scm_from_double(viewSize.y));
+}    
+
 void ProvideAttributes() {
-    scm_c_define("sge-attr-hidden", scm_from_int(SGE_Attr_Hidden));
-    scm_c_define("sge-attr-position-absolute",
+    scm_c_define("sge-attrib-hidden", scm_from_int(SGE_Attr_Hidden));
+    scm_c_define("sge-attrib-position-absolute",
                  scm_from_int(SGE_Attr_PositionAbsolute));
 }
     
