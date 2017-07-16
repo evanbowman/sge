@@ -11,7 +11,7 @@ public:
     void SetTarget(std::shared_ptr<Entity> target);
     void Update(USec dt);
     void SetSpringiness(float springiness);
-    const Vec2& GetCenter() const;
+    const sf::View& GetView() const;
     void SetCenter(const Vec2& center);
     void SetZoom(float zoom);
     

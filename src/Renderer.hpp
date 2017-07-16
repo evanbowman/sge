@@ -6,11 +6,12 @@
 #include "Types.hpp"
 
 class AnimationComponent;
+class Camera;
 class Entity;
 
 class Renderer {
 public:
-    Renderer(sf::RenderWindow& window);
+    Renderer(sf::RenderWindow& window, Camera& camera);
 
     void Visit(Entity& entity, AnimationComponent& comp);
 
@@ -23,5 +24,6 @@ private:
         ZOrderIndex zOrder;
     };
     sf::RenderWindow& m_windowRef;
+    Camera& m_cameraRef;
     std::vector<RenderTask> m_drawList;
 };

@@ -1,7 +1,11 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <memory>
 #include <chrono>
+#include <bitset>
+
+#include "Types.h"
 
 using Vec2 = sf::Vector2<float>;
 using IVec2 = sf::Vector2<int>;
@@ -13,3 +17,7 @@ using Rect = sf::IntRect;
 using USec = std::chrono::microseconds::rep;
 using UID = size_t;
 using ZOrderIndex = int;
+class Entity;
+using EntityRef = std::shared_ptr<Entity>;
+using WeakEntityRef = std::weak_ptr<Entity>;
+using AttributeSet = std::bitset<SGE_Attr_Count>;

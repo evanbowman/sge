@@ -2,12 +2,21 @@
 #include "GraphicsComponent.hpp"
 #include "Animation.hpp"
 #include "Entity.hpp"
+#include "Camera.hpp"
+#include "Utility.hpp"
 
-Renderer::Renderer(sf::RenderWindow& window) : m_windowRef(window) {}
+Renderer::Renderer(sf::RenderWindow& window, Camera& camera) :
+    m_windowRef(window),
+    m_cameraRef(camera) {}
 
 void Renderer::Visit(Entity& entity, AnimationComponent& comp) {
     auto keyframe = comp.GetAnimation()->GetKeyframe(comp.GetKeyframe());
-    keyframe.setPosition(entity.GetPosition());
+    if (entity.HasAttribute(SGE_Attr_PositionAbsolute)) {
+        keyframe.setPosition(AbsoluteTransform(m_cameraRef.GetView(),
+                                               entity.GetPosition()));
+    } else {
+        keyframe.setPosition(entity.GetPosition());
+    }
     keyframe.setColor(comp.GetColor());
     keyframe.setScale(comp.GetScale());
     m_drawList.push_back({

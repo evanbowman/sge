@@ -1,7 +1,5 @@
 #include "Entity.hpp"
 
-Entity::Entity() : m_enabled(true) {}
-
 const Vec2& Entity::GetPosition() const {
     return m_position;
 }
@@ -18,10 +16,14 @@ GraphicsComponent* Entity::GetGraphicsComponent() {
     return m_graphicsComponent.get();
 }
 
-void Entity::SetEnabled(bool enabled) {
-    m_enabled = enabled;
+bool Entity::HasAttribute(SGE_Attribute attrib) const {
+    return m_attributes[attrib];
 }
 
-bool Entity::IsEnabled() const {
-    return m_enabled;
+void Entity::AddAttribute(SGE_Attribute attrib) {
+    m_attributes[attrib] = true;
+}
+
+void Entity::RemoveAttribute(SGE_Attribute attrib) {
+    m_attributes[attrib] = false;
 }

@@ -3,8 +3,5 @@
 #include <string>
 
 namespace scheme {
-void ScriptEntry();
-
-void REPLEntry();
-
+void Start();
 }
