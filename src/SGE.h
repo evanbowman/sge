@@ -32,7 +32,7 @@ extern "C" {
     void SGE_SetCameraSpringiness(float springiness);
     void SGE_SetCameraZoom(float zoom);
     SGE_Vec2 SGE_GetCameraViewSize();
-
+    
     SGE_Bool SGE_CreateTimer(SGE_UUID* timer);
     SGE_Bool SGE_ResetTimer(SGE_UUID timer, SGE_USec* elapsed);
     SGE_Bool SGE_RemoveTimer(SGE_UUID timer);
@@ -43,6 +43,9 @@ extern "C" {
                                  SGE_IVec2 frameSize,
                                  SGE_Vec2 origin);
 
+    SGE_Bool SGE_PollEvents(SGE_EventHolder* event);
+    void SGE_RecordEvents(SGE_Bool enabled);
+    
     const char* SGE_GetError();
     
 #ifdef __cplusplus

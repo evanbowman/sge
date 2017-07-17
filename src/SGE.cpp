@@ -32,7 +32,8 @@ struct Engine {
     using TimerMap = std::unordered_map<SGE_UUID, SteadyTimer>;
     using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
 
-    Engine() : window(sf::VideoMode::getDesktopMode(),
+    Engine() : recordEvents(false),
+               window(sf::VideoMode::getDesktopMode(),
                       "SGE",
                       sf::Style::Fullscreen),
                camera(window),
@@ -49,7 +50,24 @@ struct Engine {
             case sf::Event::Closed:
                 window.close();
                 break;
-            }
+
+            case sf::Event::TextEntered:
+                if (recordEvents) {
+                    SGE_EventHolder holder;
+                    holder.event.textEntered.unicode = event.text.unicode;
+                    holder.code = SGE_EventCode_TextEntered;
+                    events.push_back(holder);
+                }
+                break;
+
+            case sf::Event::KeyPressed:
+                if (recordEvents) {
+                    SGE_EventHolder holder;
+                    holder.event.keyPressed.key = event.key.code;
+                    holder.code = SGE_EventCode_KeyPressed;
+                    events.push_back(holder);
+                }
+            }    
         }
     }
 
@@ -118,7 +136,8 @@ struct Engine {
         }
         return entityIter->second;
     }
-    
+
+    bool recordEvents;
     sf::RenderWindow window;
     Camera camera;
     Renderer renderer;
@@ -133,6 +152,7 @@ struct Engine {
     TimerMap timers;
     AnimationMap animations;
     std::vector<const char*> errors;
+    std::vector<SGE_EventHolder> events;
 };
 
 auto& g_engine = Singleton<Engine>::Instance();
@@ -357,6 +377,19 @@ extern "C" {
         };
         *animation = g_engine.uidCounter;
         return SGE_True;
+    }
+
+    SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
+        if (!g_engine.events.empty()) {
+            *event = g_engine.events.back();
+            g_engine.events.pop_back();
+            return SGE_True;
+        }
+        return SGE_False;
+    }
+
+    void SGE_RecordEvents(SGE_Bool enabled) {
+        g_engine.recordEvents = enabled;
     }
 
     const char* SGE_GetError() {

@@ -283,6 +283,33 @@ SCM_DEFINE (CameraGetViewSize, "sge-camera-get-view-size", 0, 0, 0,
     return scm_cons(scm_from_double(viewSize.x), scm_from_double(viewSize.y));
 }    
 
+SCM_DEFINE (PollEvents, "sge-poll-events", 0, 0, 0,
+            (), "Poll for window input events.") {
+    SGE_EventHolder holder;
+    if (SGE_PollEvents(&holder)) {
+        switch (holder.code) {
+        case SGE_EventCode_TextEntered:
+            return
+                scm_cons(scm_string_to_symbol(
+                             scm_from_latin1_string("sge-event-text")),
+                         scm_from_uint32(holder.event.textEntered.unicode));
+
+        case SGE_EventCode_KeyPressed:
+            return
+                scm_cons(scm_string_to_symbol(
+                             scm_from_latin1_string("sge-event-key-pressed")),
+                         scm_from_uint(holder.event.keyPressed.key));
+        }
+    }
+    return SCM_EOL;
+}
+
+SCM_DEFINE (RecordEvents, "sge-record-events", 1, 0, 0,
+            (SCM enabled), "Enable or disable event recording.") {
+    SGE_RecordEvents((SGE_Bool)scm_to_bool(enabled));
+    return SCM_EOL;
+}
+    
 void ProvideAttributes() {
     scm_c_define("sge-attrib-hidden", scm_from_int(SGE_Attr_Hidden));
     scm_c_define("sge-attrib-position-absolute",
