@@ -22,6 +22,7 @@ namespace errors {
     static const auto badEntityHandle = "Bad entity handle";
     static const auto badAnimationHandle = "Bad animation handle";
     static const auto gfxCompNotAnim = "Gfx component is not an animation";
+    static const auto missingGfxComp = "Entity has no graphics component";
 }
 
 // Note: the Engine has public access so that the C API
@@ -121,6 +122,7 @@ struct Engine {
         if (auto gfxComp = foundEntity->GetGraphicsComponent()) {
             return gfxComp;
         }
+        errors.push_back(errors::missingGfxComp);
         return nullptr;
     }
 

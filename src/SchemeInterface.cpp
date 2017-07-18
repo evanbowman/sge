@@ -28,30 +28,21 @@ namespace {
 inline SGE_UUID UUIDCast(SCM uidAsScm) {
     return scm_to_ssize_t(uidAsScm);
 }
+
+static void NotifyErrors() {
+    while (const char* err = SGE_GetError()) {
+        SGE_Exit();
+        scm_error(scm_misc_error_key, nullptr, err, SCM_EOL, SCM_EOL);
+    }
+}
     
-static void SignalMissingEntityError(const char* context) {
-    scm_error(scm_misc_error_key, context,
-              "Entity id lookup failed", SCM_EOL, SCM_EOL);
-}
-
-static void SignalMissingGraphicsComponentError(const char* context) {
-    scm_error(scm_misc_error_key, context,
-              "Entity has no graphics component", SCM_EOL, SCM_EOL);
-}
-
-static void SignalComponentTypeMismatchError(const char* context,
-                                            const char* expected) {
-    scm_error(scm_misc_error_key, context,
-              ("Component type does not match the expected " +
-               std::string(expected)).c_str(), SCM_EOL, SCM_EOL);
-}
-
 SCM_DEFINE (EntityCreate, "sge-entity-create", 0, 0, 0,
             (), "Create an entity.") {
     SGE_UUID entity;
     if (SGE_CreateEntity(&entity)) {
         return scm_from_ssize_t(entity);
     }
+    NotifyErrors();
     return SCM_EOL;
 }
 
@@ -61,21 +52,26 @@ SCM_DEFINE (EntityClone, "sge-entity-clone", 1, 0, 0,
     if (SGE_CloneEntity(UUIDCast(entity), &clone)) {
         return scm_from_ssize_t(clone);
     }
+    NotifyErrors();
     return SCM_EOL;
 }
 
 SCM_DEFINE (EntityRemove, "sge-entity-remove", 1, 0, 0,
             (SCM entity), "Remove an entity.") {
-    SGE_RemoveEntity(UUIDCast(entity));
+    if (!SGE_RemoveEntity(UUIDCast(entity))) {
+        NotifyErrors();
+    }
     return SCM_EOL;
 }
 
 SCM_DEFINE (EntitySetPosition, "sge-entity-set-position", 3, 0, 0,
             (SCM entity, SCM x, SCM y), "Set an entity\'s position.") {
-    SGE_SetEntityPosition(UUIDCast(entity), {
+    if (!SGE_SetEntityPosition(UUIDCast(entity), {
             static_cast<float>(scm_to_double(x)),
             static_cast<float>(scm_to_double(y))
-        });
+                })) {
+        NotifyErrors();
+    }
     return entity;
 }
 
@@ -83,7 +79,7 @@ SCM_DEFINE (EntityAddAttribute, "sge-entity-add-attrib", 2, 0, 0,
             (SCM entity, SCM attrib), "Add an attribute to an Entity.") {
     if (!SGE_AddEntityAttribute(UUIDCast(entity),
                                 (SGE_Attribute)scm_to_int(attrib))) {
-        // ...
+        NotifyErrors();
     }
     return entity;
 }
@@ -92,7 +88,7 @@ SCM_DEFINE (EntityRemoveAttribute, "sge-entity-remove-attrib", 2, 0, 0,
             (SCM entity, SCM attrib), "Remove an attribute from an Entity.") {
     if (!SGE_RemoveEntityAttribute(UUIDCast(entity),
                                    (SGE_Attribute)scm_to_int(attrib))) {
-        // ...
+        NotifyErrors();
     }
     return entity;
 }
@@ -103,6 +99,7 @@ SCM_DEFINE (EntityGetPosition, "sge-entity-get-position", 1, 0, 0,
     if (SGE_GetEntityPosition(UUIDCast(entity), &pos)) {
         return scm_cons(scm_from_double(pos.x), scm_from_double(pos.y));    
     }
+    NotifyErrors();
     return SCM_EOL;
 }
 
@@ -111,7 +108,7 @@ SCM_DEFINE (EntitySetAnimation, "sge-entity-set-animation", 2, 0, 0,
             "Set a keyframe sequence representation for an entity.") {
     if (!SGE_SetEntityAnimation(UUIDCast(entity),
                                 scm_to_ssize_t(animation))) {
-        // TODO...
+        NotifyErrors();
     }
     return entity;
 }
@@ -121,7 +118,7 @@ SCM_DEFINE (EntitySetKeyframe, "sge-entity-set-keyframe", 2, 0, 0,
             "Set the keyframe for an entity\'s animation.") {
     if (!SGE_SetEntityKeyframe(UUIDCast(entity),
                                scm_to_ssize_t(keyframe))) {
-        // TODO...
+        NotifyErrors();
     }
     return entity;
 }
@@ -133,7 +130,7 @@ SCM_DEFINE (EntitySetScale, "sge-entity-set-scale", 3, 0, 0,
                 static_cast<float>(scm_to_double(xScale)),
                 static_cast<float>(scm_to_double(yScale))
             })) {
-        // TODO...
+        NotifyErrors();
     }
     return entity;
 }
@@ -141,26 +138,32 @@ SCM_DEFINE (EntitySetScale, "sge-entity-set-scale", 3, 0, 0,
 SCM_DEFINE (EntitySetZOrder, "sge-entity-set-zorder", 2, 0, 0,
             (SCM entity, SCM zOrder),
             "Set an entity\'s zorder index.") {
-    SGE_SetEntityZOrder(UUIDCast(entity), scm_to_int(zOrder));
+    if (!SGE_SetEntityZOrder(UUIDCast(entity), scm_to_int(zOrder))) {
+        NotifyErrors();
+    }
     return entity;
 }
     
 SCM_DEFINE (EntitySetBlendMode, "sge-entity-set-blend-mode", 2, 0, 0,
             (SCM entity, SCM blendMode),
             "Set an entitiy\'s blend mode.") {
-    SGE_SetEntityBlendMode(UUIDCast(entity), (SGE_BlendMode)scm_to_int(blendMode));
+    if (!SGE_SetEntityBlendMode(UUIDCast(entity), (SGE_BlendMode)scm_to_int(blendMode))) {
+        NotifyErrors();
+    }
     return entity;
 }
 
 SCM_DEFINE (EntitySetColor, "sge-entity-set-rgba", 5, 0, 0,
             (SCM entity, SCM r, SCM g, SCM b, SCM a),
             "Set an entity\'s color.") {
-    SGE_SetEntityColor(UUIDCast(entity), {
+    if (!SGE_SetEntityColor(UUIDCast(entity), {
         scm_to_uint8(r),
         scm_to_uint8(g),
         scm_to_uint8(b),
         scm_to_uint8(a)
-    });
+    })) {
+        NotifyErrors();
+    }
     return entity;
 }
     
@@ -170,6 +173,7 @@ SCM_DEFINE (EntityGetKeyframe, "sge-entity-get-keyframe", 1, 0, 0,
     if (SGE_GetEntityKeyframe(UUIDCast(entity), &keyframe)) {
         return scm_from_ssize_t(keyframe);        
     }
+    NotifyErrors();
     return SCM_EOL;
 }
     
@@ -203,6 +207,7 @@ SCM_DEFINE (TimerCreate, "sge-timer-create", 0, 0, 0,
     if (SGE_CreateTimer(&timer)) {
         return scm_from_ssize_t(timer);
     }
+    NotifyErrors();
     return SCM_EOL;
 }
 
@@ -212,12 +217,15 @@ SCM_DEFINE (TimerReset, "sge-timer-reset", 1, 0, 0,
     if (SGE_ResetTimer(UUIDCast(timer), &elapsed)) {
         return scm_from_ssize_t(elapsed);
     }
+    NotifyErrors();
     return 0;
 }
 
 SCM_DEFINE (TimerRemove, "sge-timer-remove", 1, 0, 0,
             (SCM timer), "Remove a timer.") {
-    SGE_RemoveTimer(UUIDCast(timer));
+    if (!SGE_RemoveTimer(UUIDCast(timer))) {
+        NotifyErrors();
+    }
     return SCM_EOL;
 }
 
@@ -251,13 +259,16 @@ SCM_DEFINE (AnimationCreate, "sge-animation-create", 7, 0, 0,
                         })) {
         return scm_from_ssize_t(animation);
     }
+    NotifyErrors();
     return SCM_EOL;
 }
    
 SCM_DEFINE (CameraSetTarget, "sge-camera-set-target", 1, 0, 0,
             (SCM entity),
             "Set camera target to an entity.") {
-    SGE_SetCameraTarget(UUIDCast(entity));
+    if (!SGE_SetCameraTarget(UUIDCast(entity))) {
+        NotifyErrors();
+    }
     return SCM_EOL;
 }
 
