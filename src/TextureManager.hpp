@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
+#include <mutex>
 
 class TextureRequest {
 public:
@@ -17,7 +18,7 @@ private:
 class TextureManager {
 public:
     void Accept(TextureRequest& req);
-    
+
 private:
     sf::Texture& LoadTexture(const std::string& fileName);
     std::unordered_map<std::string, sf::Texture> m_textures;

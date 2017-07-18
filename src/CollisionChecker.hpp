@@ -4,6 +4,7 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <mutex>
 
 #include "Types.hpp"
 
@@ -12,7 +13,7 @@ public:
     void Update();
     void AddDynamicEntity(EntityRef entity);
     void AddStaticEntity(EntityRef entity);
-    
+
 private:
     struct Sector {
         using AList = std::vector<std::pair<WeakEntityRef, WeakEntityRef>>;
@@ -29,7 +30,7 @@ private:
     void UpdateSector(const Coord& coord, Sector& sector);
     Coord CalcTargetSectorLoc(const Vec2& position);
     Sector& FindOrCreateSector(const Coord& coord);
-    
+
     SectorTree m_sectors;
     std::mutex m_sectorsMtx;
     Vec2 m_sectorSize { 128.f, 128.f };

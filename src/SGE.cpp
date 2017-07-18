@@ -91,8 +91,9 @@ struct Engine {
         std::thread logicThread([] {
             scheme::Start();
         });
-        SteadyTimer gfxDeltaTimer;    
+        SteadyTimer gfxDeltaTimer;
         while (window.isOpen()) {
+            std::lock_guard<std::mutex> lock(entitiesMtx);
             HandleTextureRequests();
             EventLoop();
             camera.Update(gfxDeltaTimer.Reset());
@@ -101,7 +102,7 @@ struct Engine {
                 if (!entity->HasAttribute(SGE_Attr_Hidden)) {
                     if (auto gfx = entity->GetGraphicsComponent()) {
                         gfx->Dispatch(*entity.get(), renderer);
-                    }      
+                    }
                 }
             }
             window.clear(refreshColor);
@@ -180,7 +181,7 @@ extern "C" {
             windowSize.x, windowSize.y
         };
     }
-    
+
     SGE_Bool SGE_CreateEntity(SGE_UUID* entity) {
         std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         auto created = std::make_shared<Entity>();
@@ -217,7 +218,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             foundEntity->AddAttribute(attrib);
@@ -233,7 +234,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityAnimation(SGE_UUID entity, SGE_UUID animation) {
         auto foundEntity = g_engine.FindEntity(entity);
         if (!foundEntity) {
@@ -249,7 +250,7 @@ extern "C" {
             });
         return SGE_True;
     }
-    
+
     SGE_Bool SGE_SetEntityKeyframe(SGE_UUID entity, SGE_Keyframe keyframe) {
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             if (gfxComp->TypeId() !=
@@ -262,7 +263,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityPosition(SGE_UUID entity, SGE_Vec2 pos) {
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             foundEntity->SetPosition({ pos.x, pos.y });
@@ -270,7 +271,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityScale(SGE_UUID entity, SGE_Vec2 scale) {
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetScale({ scale.x, scale.y });
@@ -278,7 +279,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityBlendMode(SGE_UUID entity, SGE_BlendMode mode) {
         static const std::array<sf::BlendMode, 4> modes {{
             sf::BlendNone, sf::BlendAdd, sf::BlendAlpha, sf::BlendMultiply
@@ -292,7 +293,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityZOrder(SGE_UUID entity, int zOrder) {
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetZOrder(zOrder);
@@ -300,7 +301,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetEntityColor(SGE_UUID entity, SGE_Color color) {
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetColor({ color.r, color.g, color.b, color.a });
@@ -308,7 +309,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_GetEntityPosition(SGE_UUID entity, SGE_Vec2* position) {
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             const auto& entityPos = foundEntity->GetPosition();
@@ -317,7 +318,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_GetEntityKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe) {
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             if (gfxComp->TypeId() ==
@@ -330,7 +331,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_RemoveEntity(SGE_UUID entity) {
         std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         auto entityIter = g_engine.entities.find(entity);
@@ -341,7 +342,7 @@ extern "C" {
         g_engine.errors.push_back(errors::badEntityHandle);
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_SetCameraTarget(SGE_UUID entity) {
         if (auto entityRef = g_engine.FindEntityRef(entity)) {
             g_engine.camera.SetTarget(entityRef);
@@ -349,15 +350,15 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     void SGE_SetCameraCenter(SGE_Vec2 center) {
         g_engine.camera.SetCenter({ center.x, center.y });
     }
-    
+
     void SGE_SetCameraSpringiness(float springiness) {
         g_engine.camera.SetSpringiness(springiness);
     }
-    
+
     void SGE_SetCameraZoom(float zoom) {
         g_engine.camera.SetZoom(zoom);
     }
@@ -374,7 +375,7 @@ extern "C" {
         *timer = g_engine.uidCounter;
         return SGE_True;
     }
-    
+
     SGE_Bool SGE_ResetTimer(SGE_UUID timer, SGE_USec* elapsed) {
         auto timerIter = g_engine.timers.find(timer);
         if (timerIter != g_engine.timers.end()) {
@@ -383,7 +384,7 @@ extern "C" {
         }
         return SGE_False;
     }
-    
+
     SGE_Bool SGE_RemoveTimer(SGE_UUID timer) {
         auto timerIter = g_engine.timers.find(timer);
         if (timerIter != g_engine.timers.end()) {
@@ -441,7 +442,7 @@ extern "C" {
 
 int main(int argc, char** argv) {
     cxxopts::Options options("sge", "Simple 2d Game Engine");
-    options.add_options()    
+    options.add_options()
         ("p,package", "Run on a specific directory",
          cxxopts::value<std::string>())
         ("h,help", "display this message");

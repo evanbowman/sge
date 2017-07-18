@@ -44,7 +44,7 @@ std::string DefaultPathImpl() {
     return rpath;
 }
 
-#elif __LINUX__
+#elif __linux__
 #include <linux/limits.h>
 #include <unistd.h>
 
