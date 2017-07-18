@@ -318,6 +318,12 @@ SCM_DEFINE (RecordEvents, "sge-record-events", 1, 0, 0,
     SGE_RecordEvents((SGE_Bool)scm_to_bool(enabled));
     return SCM_EOL;
 }
+
+SCM_DEFINE (Exit, "sge-exit", 0, 0, 0,
+            (), "Quit the engine.") {
+    SGE_Exit();
+    return SCM_EOL;
+}
     
 void ProvideAttributes() {
     scm_c_define("sge-attrib-hidden", scm_from_int(SGE_Attr_Hidden));

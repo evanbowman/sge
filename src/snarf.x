@@ -29,3 +29,4 @@ scm_c_define_gsubr (s_CameraSetZoom, 1, 0, 0, (scm_t_subr) CameraSetZoom);;
 scm_c_define_gsubr (s_CameraGetViewSize, 0, 0, 0, (scm_t_subr) CameraGetViewSize);;
 scm_c_define_gsubr (s_PollEvents, 0, 0, 0, (scm_t_subr) PollEvents);;
 scm_c_define_gsubr (s_RecordEvents, 1, 0, 0, (scm_t_subr) RecordEvents);;
+scm_c_define_gsubr (s_Exit, 0, 0, 0, (scm_t_subr) Exit);;

@@ -33,6 +33,7 @@ struct Engine {
     using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
 
     Engine() : recordEvents(false),
+               running(false),
                window(sf::VideoMode::getDesktopMode(),
                       "SGE",
                       sf::Style::Fullscreen),
@@ -85,6 +86,7 @@ struct Engine {
     }
 
     void Run() {
+        running = true;
         std::thread logicThread([] {
             scheme::Start();
         });
@@ -104,6 +106,9 @@ struct Engine {
             window.clear(refreshColor);
             renderer.Display();
             window.display();
+            if (!running) {
+                window.close();
+            }
         }
         logicThread.join();
     }
@@ -138,6 +143,7 @@ struct Engine {
     }
 
     bool recordEvents;
+    bool running;
     sf::RenderWindow window;
     Camera camera;
     Renderer renderer;
@@ -421,6 +427,10 @@ extern "C" {
         const auto prevError = g_engine.errors.back();
         g_engine.errors.pop_back();
         return prevError;
+    }
+
+    void SGE_Exit() {
+        g_engine.running = false;
     }
 }
 

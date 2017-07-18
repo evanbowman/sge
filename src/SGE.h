@@ -48,6 +48,8 @@ extern "C" {
     void SGE_RecordEvents(SGE_Bool enabled);
     
     const char* SGE_GetError();
+
+    void SGE_Exit();
     
 #ifdef __cplusplus
 }
