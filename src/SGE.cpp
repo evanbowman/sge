@@ -184,6 +184,31 @@ extern "C" {
         }
         return SGE_False;
     }
+
+    SGE_Bool SGE_CloneEntity(SGE_UUID src, SGE_UUID* dest) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
+        if (auto foundSrc = g_engine.FindEntity(src)) {
+            auto clone = std::make_shared<Entity>();
+            if (!clone) {
+                return SGE_False;
+            }
+            clone->SetAttributeSet(foundSrc->GetAttributeSet());
+            clone->SetPosition(foundSrc->GetPosition());
+            std::unique_ptr<GraphicsComponent> gfxCompClone;
+            if (auto srcGfxComp = foundSrc->GetGraphicsComponent()) {
+                gfxCompClone = std::unique_ptr<GraphicsComponent>(srcGfxComp->Clone());
+                if (!gfxCompClone) {
+                    return SGE_False;
+                }
+            }
+            clone->SetGraphicsComponent(std::move(gfxCompClone));
+            g_engine.uidCounter++;
+            g_engine.entities[g_engine.uidCounter] = clone;
+            *dest = g_engine.uidCounter;
+            return SGE_True;
+        }
+        return SGE_False;
+    }
     
     SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
         if (auto foundEntity = g_engine.FindEntity(entity)) {

@@ -14,6 +14,7 @@ extern "C" {
     SGE_UIVec2 SGE_GetWindowSize();
 
     SGE_Bool SGE_CreateEntity(SGE_UUID* entity);
+    SGE_Bool SGE_CloneEntity(SGE_UUID src, SGE_UUID* dest);
     SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib);
     SGE_Bool SGE_SetEntityAnimation(SGE_UUID entity, SGE_UUID animation);
     SGE_Bool SGE_SetEntityKeyframe(SGE_UUID entity, SGE_Keyframe keyframe);

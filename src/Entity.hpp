@@ -16,6 +16,8 @@ public:
     bool HasAttribute(SGE_Attribute attrib) const;
     void AddAttribute(SGE_Attribute attrib);
     void RemoveAttribute(SGE_Attribute attrib);
+    AttributeSet GetAttributeSet() const;
+    void SetAttributeSet(const AttributeSet set);
     
 private:
     Vec2 m_position;

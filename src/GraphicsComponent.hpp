@@ -36,6 +36,8 @@ public:
     void SetScale(const Vec2& scale);
 
     RenderStates& GetRenderStates();
+
+    virtual GraphicsComponent* Clone() = 0;
     
 protected:
     RenderStates m_renderStates;
@@ -52,6 +54,8 @@ public:
                   Renderer& renderer) override;
     Id TypeId() const override;
 
+    AnimationComponent* Clone() override;
+    
     void SetKeyframe(size_t keyframe);
     size_t GetKeyframe() const;
     Animation* GetAnimation();

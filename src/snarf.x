@@ -1,5 +1,6 @@
 /* cpp arguments: SchemeInterface.cpp -std=c++14 -I /usr/local/include/guile/2.2/ */
 scm_c_define_gsubr (s_EntityCreate, 0, 0, 0, (scm_t_subr) EntityCreate);;
+scm_c_define_gsubr (s_EntityClone, 1, 0, 0, (scm_t_subr) EntityClone);;
 scm_c_define_gsubr (s_EntityRemove, 1, 0, 0, (scm_t_subr) EntityRemove);;
 scm_c_define_gsubr (s_EntitySetPosition, 3, 0, 0, (scm_t_subr) EntitySetPosition);;
 scm_c_define_gsubr (s_EntityAddAttribute, 2, 0, 0, (scm_t_subr) EntityAddAttribute);;

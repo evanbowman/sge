@@ -55,6 +55,15 @@ SCM_DEFINE (EntityCreate, "sge-entity-create", 0, 0, 0,
     return SCM_EOL;
 }
 
+SCM_DEFINE (EntityClone, "sge-entity-clone", 1, 0, 0,
+            (SCM entity), "Clone an entity.") {
+    SGE_UUID clone;
+    if (SGE_CloneEntity(UUIDCast(entity), &clone)) {
+        return scm_from_ssize_t(clone);
+    }
+    return SCM_EOL;
+}
+
 SCM_DEFINE (EntityRemove, "sge-entity-remove", 1, 0, 0,
             (SCM entity), "Remove an entity.") {
     SGE_RemoveEntity(UUIDCast(entity));

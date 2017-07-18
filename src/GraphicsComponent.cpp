@@ -55,3 +55,11 @@ GraphicsComponent::Id AnimationComponent::TypeId() const {
 
 AnimationComponent::AnimationComponent(Animation* animation) :
     m_keyframe(0), m_animation(animation) {}
+
+AnimationComponent* AnimationComponent::Clone() {
+    auto clone = new AnimationComponent(m_animation);
+    if (clone) {
+        *clone = *this;
+    }
+    return clone;
+}

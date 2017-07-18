@@ -27,3 +27,11 @@ void Entity::AddAttribute(SGE_Attribute attrib) {
 void Entity::RemoveAttribute(SGE_Attribute attrib) {
     m_attributes[attrib] = false;
 }
+
+AttributeSet Entity::GetAttributeSet() const {
+    return m_attributes;
+}
+
+void Entity::SetAttributeSet(AttributeSet set) {
+    m_attributes = set;
+}
