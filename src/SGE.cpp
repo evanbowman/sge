@@ -7,11 +7,13 @@
 #include <unordered_map>
 #include <thread>
 #include <iostream>
+#include <queue>
 
 #include "Animation.hpp"
 #include "Camera.hpp"
 #include "CollisionChecker.hpp"
 #include "Entity.hpp"
+#include "PooledHashmap.hpp"
 #include "Renderer.hpp"
 #include "Singleton.hpp"
 #include "SchemeInterface.hpp"
@@ -38,9 +40,9 @@ struct Engine {
 
     Engine() : recordEvents(false),
                running(false),
-               window(sf::VideoMode(1280, 720),
+               window(sf::VideoMode::getDesktopMode(),
                       "SGE",
-                      sf::Style::Default),
+                      sf::Style::Fullscreen),
                camera(window),
                renderer(window, camera),
                m_uidCounter(0) {
@@ -48,6 +50,12 @@ struct Engine {
         window.setVerticalSyncEnabled(true);
     }
 
+    void RecordEvent(const SGE_EventHolder& holder) {
+        events.Get([&holder](std::queue<SGE_EventHolder>& eventsQueue) {
+            eventsQueue.push(holder);
+        });
+    }
+    
     void EventLoop() {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -61,9 +69,7 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.textEntered.unicode = event.text.unicode;
                     holder.code = SGE_EventCode_TextEntered;
-                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
-                        eventsVec.push_back(holder);
-                    });
+                    RecordEvent(holder);
                 }
                 break;
 
@@ -72,9 +78,7 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.keyPressed.key = event.key.code;
                     holder.code = SGE_EventCode_KeyPressed;
-                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
-                        eventsVec.push_back(holder);
-                    });
+                    RecordEvent(holder);
                 }
                 break;
 
@@ -83,9 +87,7 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.keyReleased.key = event.key.code;
                     holder.code = SGE_EventCode_KeyReleased;
-                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
-                        eventsVec.push_back(holder);
-                    });
+                    RecordEvent(holder);
                 }
                 break;
             }
@@ -146,7 +148,7 @@ struct Engine {
     std::mutex textureReqMtx;
     std::vector<std::shared_ptr<TextureRequest>> textureRequests;
     TimerMap timers;
-    Sync<std::vector<SGE_EventHolder>> events;
+    Sync<std::queue<SGE_EventHolder>> events;
 
     // Note: shallow copy only. Pass a statically allocated string.
     void PushError(const char* err) {
@@ -510,10 +512,10 @@ extern "C" {
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
         SGE_Bool ret = SGE_False;
-        g_engine.events.Get([&ret, event](std::vector<SGE_EventHolder>& eventsVec) {
-            if (!eventsVec.empty()) {
-                *event = eventsVec.back();
-                eventsVec.pop_back();
+        g_engine.events.Get([&ret, event](std::queue<SGE_EventHolder>& eventsQueue) {
+            if (!eventsQueue.empty()) {
+                *event = eventsQueue.front();
+                eventsQueue.pop();
                 ret = SGE_True;
             }
         });
@@ -533,24 +535,25 @@ extern "C" {
     }
 }
 
-#include "cxxopts/cxxopts.hpp"
+// #include "cxxopts/cxxopts.hpp"
 #include "ResourcePath.hpp"
 
 int main(int argc, char** argv) {
-    cxxopts::Options options("sge", "Simple 2d Game Engine");
-    options.add_options()
-        ("p,package", "Run on a specific directory",
-         cxxopts::value<std::string>())
-        ("h,help", "display this message");
-    try {
-        options.parse(argc, argv);
-    } catch (const std::exception& ex) {
-        std::cerr << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (options.count("p")) {
-        ConfigureResourcePath(options["p"].as<std::string>());
-    }
+    // cxxopts::Options options("sge", "Simple 2d Game Engine");
+    // options.add_options()
+    //     ("p,package", "Run on a specific directory",
+    //      cxxopts::value<std::string>())
+    //     ("h,help", "display this message");
+    // try {
+    //     options.parse(argc, argv);
+    // } catch (const std::exception& ex) {
+    //     std::cerr << ex.what() << std::endl;
+    //     return EXIT_FAILURE;
+    // }
+    // if (options.count("p")) {
+    //     ConfigureResourcePath(options["p"].as<std::string>());
+    // }
+    ConfigureResourcePath("/Users/evan_bowman/Documents/platformer/");
     Singleton<Engine>::Instance().Run();
     return EXIT_SUCCESS;
 }

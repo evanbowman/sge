@@ -16,7 +16,7 @@ class MemPool {
     std::mutex m_mutex;
     
     void EnlistChunk() {
-        static const size_t allocCount = 128;
+        static const size_t allocCount = 127;
         static const size_t allocSize = sizeof(Cell) * allocCount;
         auto mem = (Cell*)malloc(allocSize);
         for (Cell* cell = mem; cell < mem + allocCount; ++cell) {

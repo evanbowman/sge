@@ -324,7 +324,7 @@ SCM_DEFINE (PollEvents, "sge-poll-events", 0, 0, 0,
             return
                 scm_cons(scm_string_to_symbol(
                              scm_from_latin1_string("sge-event-key-released")),
-                         scm_from_uint32(holder.event.textEntered.unicode));
+                         scm_from_uint(holder.event.keyReleased.key));
         }
     }
     return SCM_EOL;
