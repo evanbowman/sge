@@ -76,6 +76,18 @@ struct Engine {
                         eventsVec.push_back(holder);
                     });
                 }
+                break;
+
+            case sf::Event::KeyReleased:
+                if (recordEvents) {
+                    SGE_EventHolder holder;
+                    holder.event.keyReleased.key = event.key.code;
+                    holder.code = SGE_EventCode_KeyReleased;
+                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
+                        eventsVec.push_back(holder);
+                    });
+                }
+                break;
             }
         }
     }

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <bitset>
 
-#include "Types.h"
+#include "SGE.h"
 
 using Vec2 = sf::Vector2<float>;
 using IVec2 = sf::Vector2<int>;
@@ -15,7 +15,6 @@ using RenderStates = sf::RenderStates;
 using String = std::string;
 using Rect = sf::IntRect;
 using USec = std::chrono::microseconds::rep;
-using UID = size_t;
 using ZOrderIndex = int;
 class Entity;
 using EntityRef = std::shared_ptr<Entity>;

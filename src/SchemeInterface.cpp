@@ -319,6 +319,12 @@ SCM_DEFINE (PollEvents, "sge-poll-events", 0, 0, 0,
                 scm_cons(scm_string_to_symbol(
                              scm_from_latin1_string("sge-event-key-pressed")),
                          scm_from_uint(holder.event.keyPressed.key));
+
+        case SGE_EventCode_KeyReleased:
+            return
+                scm_cons(scm_string_to_symbol(
+                             scm_from_latin1_string("sge-event-key-released")),
+                         scm_from_uint32(holder.event.textEntered.unicode));
         }
     }
     return SCM_EOL;
@@ -453,6 +459,7 @@ void ProvideKeymap() {
     MAP_KEY(sf::Keyboard::F14, "sge-key-f14");
     MAP_KEY(sf::Keyboard::F15, "sge-key-f15");
     MAP_KEY(sf::Keyboard::Pause, "sge-key-pause");
+    MAP_KEY(sf::Keyboard::KeyCount, "sge-key-count");
 }
     
 void DoEngineAPIWrap() {
