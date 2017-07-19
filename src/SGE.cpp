@@ -15,6 +15,7 @@
 #include "Renderer.hpp"
 #include "Singleton.hpp"
 #include "SchemeInterface.hpp"
+#include "Sync.hpp"
 #include "Types.hpp"
 #include "Timer.hpp"
 #include "TextureManager.hpp"
@@ -37,9 +38,9 @@ struct Engine {
 
     Engine() : recordEvents(false),
                running(false),
-               window(sf::VideoMode::getDesktopMode(),
+               window(sf::VideoMode(1280, 720),
                       "SGE",
-                      sf::Style::Fullscreen),
+                      sf::Style::Default),
                camera(window),
                renderer(window, camera),
                m_uidCounter(0) {
@@ -60,8 +61,9 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.textEntered.unicode = event.text.unicode;
                     holder.code = SGE_EventCode_TextEntered;
-                    std::lock_guard<std::mutex> lock(eventListMtx);
-                    events.push_back(holder);
+                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
+                        eventsVec.push_back(holder);
+                    });
                 }
                 break;
 
@@ -70,8 +72,9 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.keyPressed.key = event.key.code;
                     holder.code = SGE_EventCode_KeyPressed;
-                    std::lock_guard<std::mutex> lock(eventListMtx);
-                    events.push_back(holder);
+                    events.Get([&holder](std::vector<SGE_EventHolder>& eventsVec) {
+                        eventsVec.push_back(holder);
+                    });
                 }
             }
         }
@@ -100,17 +103,16 @@ struct Engine {
             HandleTextureRequests();
             EventLoop();
             camera.Update(gfxDeltaTimer.Reset());
-            {
-                std::lock_guard<std::mutex> lock(m_entitiesMtx);
-                for (auto& entityNode : m_entities) {
+            m_entities.Get([this](EntityMap& entities) {
+                for (auto& entityNode : entities) {
                     auto& entity = entityNode.second;
                     if (!entity->HasAttribute(SGE_Attr_Hidden)) {
                         if (auto gfx = entity->GetGraphicsComponent()) {
-                            gfx->Dispatch(*entity.get(), renderer);
+                            gfx->Dispatch(*entity.get(), this->renderer);
                         }
                     }
                 }
-            }
+            });
             window.clear(refreshColor);
             renderer.Display();
             window.display();
@@ -132,8 +134,7 @@ struct Engine {
     std::mutex textureReqMtx;
     std::vector<std::shared_ptr<TextureRequest>> textureRequests;
     TimerMap timers;
-    std::mutex eventListMtx;
-    std::vector<SGE_EventHolder> events;
+    Sync<std::vector<SGE_EventHolder>> events;
 
     // Note: shallow copy only. Pass a statically allocated string.
     void PushError(const char* err) {
@@ -149,25 +150,21 @@ struct Engine {
     }
 
     void WithEntities(std::function<void(EntityMap&)> procedure) {
-        std::lock_guard<std::mutex> lock(m_entitiesMtx);
-        procedure(m_entities);
+        m_entities.Get(procedure);
     }
 
     void WithAnimations(std::function<void(AnimationMap&)> procedure) {
-        std::lock_guard<std::mutex> lock(m_animationsMtx);
-        procedure(m_animations);
+        m_animations.Get(procedure);
     }
 
     SGE_UUID NewUUID() { return ++m_uidCounter; }
 
 private:
-    EntityMap m_entities;
-    std::mutex m_entitiesMtx;
+    Sync<EntityMap> m_entities;
+    Sync<AnimationMap> m_animations;
     std::vector<const char*> m_errors;
     std::mutex m_errorsMtx;
     std::atomic<SGE_UUID> m_uidCounter;
-    AnimationMap m_animations;
-    std::mutex m_animationsMtx;
 };
 
 auto& g_engine = Singleton<Engine>::Instance();
@@ -500,13 +497,15 @@ extern "C" {
     }
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
-        std::lock_guard<std::mutex> lock(g_engine.eventListMtx);
-        if (!g_engine.events.empty()) {
-            *event = g_engine.events.back();
-            g_engine.events.pop_back();
-            return SGE_True;
-        }
-        return SGE_False;
+        SGE_Bool ret = SGE_False;
+        g_engine.events.Get([&ret, event](std::vector<SGE_EventHolder>& eventsVec) {
+            if (!eventsVec.empty()) {
+                *event = eventsVec.back();
+                eventsVec.pop_back();
+                ret = SGE_True;
+            }
+        });
+        return ret;
     }
 
     void SGE_RecordEvents(SGE_Bool enabled) {
