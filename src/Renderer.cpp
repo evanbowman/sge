@@ -26,7 +26,7 @@ void Renderer::Visit(Entity& entity, AnimationComponent& comp) {
 
 void Renderer::Display() {
     std::sort(m_drawList.begin(), m_drawList.end(),
-              [](const auto& lhs, const auto& rhs) {
+              [](const RenderTask& lhs, const RenderTask& rhs) {
                   return lhs.zOrder < rhs.zOrder;
               });
     for (auto& element : m_drawList) {

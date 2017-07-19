@@ -1,5 +1,6 @@
 #include "SGE.h"
 
+#include <atomic>
 #include <array>
 #include <SFML/Graphics.hpp>
 #include <list>
@@ -17,6 +18,7 @@
 #include "Types.hpp"
 #include "Timer.hpp"
 #include "TextureManager.hpp"
+#include "Utility.hpp"
 
 namespace errors {
     static const auto badEntityHandle = "Bad entity handle";
@@ -32,7 +34,7 @@ using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
 // TODO: Needs synchronization: Timers, Camera
 
 struct Engine {
-    
+
     Engine() : recordEvents(false),
                running(false),
                window(sf::VideoMode::getDesktopMode(),
@@ -120,7 +122,7 @@ struct Engine {
     }
 
     bool recordEvents;
-    bool running;
+    std::atomic<bool> running;
     sf::RenderWindow window;
     Camera camera;
     Renderer renderer;
@@ -145,7 +147,7 @@ struct Engine {
         m_errors.pop_back();
         return lastError;
     }
-    
+
     void WithEntities(std::function<void(EntityMap&)> procedure) {
         std::lock_guard<std::mutex> lock(m_entitiesMtx);
         procedure(m_entities);
@@ -155,9 +157,9 @@ struct Engine {
         std::lock_guard<std::mutex> lock(m_animationsMtx);
         procedure(m_animations);
     }
-    
+
     SGE_UUID NewUUID() { return ++m_uidCounter; }
-    
+
 private:
     EntityMap m_entities;
     std::mutex m_entitiesMtx;
@@ -296,7 +298,7 @@ extern "C" {
                     return;
                 }
                 foundEntity->SetGraphicsComponent({
-                        std::make_unique<AnimationComponent>(&animationIter->second)
+                        make_unique<AnimationComponent>(&animationIter->second)
                     });
                 rc = SGE_True;
             });
