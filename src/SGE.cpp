@@ -58,6 +58,7 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.textEntered.unicode = event.text.unicode;
                     holder.code = SGE_EventCode_TextEntered;
+                    std::lock_guard<std::mutex> lock(eventListMtx);
                     events.push_back(holder);
                 }
                 break;
@@ -67,9 +68,10 @@ struct Engine {
                     SGE_EventHolder holder;
                     holder.event.keyPressed.key = event.key.code;
                     holder.code = SGE_EventCode_KeyPressed;
+                    std::lock_guard<std::mutex> lock(eventListMtx);
                     events.push_back(holder);
                 }
-            }    
+            }
         }
     }
 
@@ -93,15 +95,17 @@ struct Engine {
         });
         SteadyTimer gfxDeltaTimer;
         while (window.isOpen()) {
-            std::lock_guard<std::mutex> lock(entitiesMtx);
             HandleTextureRequests();
             EventLoop();
             camera.Update(gfxDeltaTimer.Reset());
-            for (auto& entityNode : entities) {
-                auto& entity = entityNode.second;
-                if (!entity->HasAttribute(SGE_Attr_Hidden)) {
-                    if (auto gfx = entity->GetGraphicsComponent()) {
-                        gfx->Dispatch(*entity.get(), renderer);
+            {
+                std::lock_guard<std::mutex> lock(entitiesMtx);
+                for (auto& entityNode : entities) {
+                    auto& entity = entityNode.second;
+                    if (!entity->HasAttribute(SGE_Attr_Hidden)) {
+                        if (auto gfx = entity->GetGraphicsComponent()) {
+                            gfx->Dispatch(*entity.get(), renderer);
+                        }
                     }
                 }
             }
@@ -161,6 +165,7 @@ struct Engine {
     TimerMap timers;
     AnimationMap animations;
     std::vector<const char*> errors;
+    std::mutex eventListMtx;
     std::vector<SGE_EventHolder> events;
 };
 
@@ -220,6 +225,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             foundEntity->AddAttribute(attrib);
             return SGE_True;
@@ -228,6 +234,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_RemoveEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             foundEntity->RemoveAttribute(attrib);
             return SGE_True;
@@ -236,6 +243,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityAnimation(SGE_UUID entity, SGE_UUID animation) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         auto foundEntity = g_engine.FindEntity(entity);
         if (!foundEntity) {
             return SGE_False;
@@ -252,6 +260,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityKeyframe(SGE_UUID entity, SGE_Keyframe keyframe) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             if (gfxComp->TypeId() !=
                 GraphicsComponent::Id::AnimationComponent) {
@@ -265,6 +274,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityPosition(SGE_UUID entity, SGE_Vec2 pos) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             foundEntity->SetPosition({ pos.x, pos.y });
             return SGE_True;
@@ -273,6 +283,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityScale(SGE_UUID entity, SGE_Vec2 scale) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetScale({ scale.x, scale.y });
             return SGE_True;
@@ -281,6 +292,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityBlendMode(SGE_UUID entity, SGE_BlendMode mode) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         static const std::array<sf::BlendMode, 4> modes {{
             sf::BlendNone, sf::BlendAdd, sf::BlendAlpha, sf::BlendMultiply
         }};
@@ -295,6 +307,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityZOrder(SGE_UUID entity, int zOrder) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetZOrder(zOrder);
             return SGE_True;
@@ -303,6 +316,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetEntityColor(SGE_UUID entity, SGE_Color color) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             gfxComp->SetColor({ color.r, color.g, color.b, color.a });
             return SGE_True;
@@ -311,6 +325,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_GetEntityPosition(SGE_UUID entity, SGE_Vec2* position) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto foundEntity = g_engine.FindEntity(entity)) {
             const auto& entityPos = foundEntity->GetPosition();
             *position = { entityPos.x, entityPos.y };
@@ -320,6 +335,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_GetEntityKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto gfxComp = g_engine.FindGfxComp(entity)) {
             if (gfxComp->TypeId() ==
                 GraphicsComponent::Id::AnimationComponent) {
@@ -344,6 +360,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_SetCameraTarget(SGE_UUID entity) {
+        std::lock_guard<std::mutex> lock(g_engine.entitiesMtx);
         if (auto entityRef = g_engine.FindEntityRef(entity)) {
             g_engine.camera.SetTarget(entityRef);
             return SGE_True;
@@ -414,6 +431,7 @@ extern "C" {
     }
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
+        std::lock_guard<std::mutex> lock(g_engine.eventListMtx);
         if (!g_engine.events.empty()) {
             *event = g_engine.events.back();
             g_engine.events.pop_back();
