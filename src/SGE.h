@@ -51,20 +51,19 @@ typedef enum {
 
 typedef struct {
     uint32_t unicode;
-} SGE_TextEntered;
+} SGE_TextEnteredEvent;
 
 typedef struct {
-    int key;
-} SGE_KeyPressed;
-
-typedef struct {
-    int key;
-} SGE_KeyReleased;
+    int keyCode;
+    SGE_Bool altPressed;
+    SGE_Bool controlPressed;
+    SGE_Bool shiftPressed;
+    SGE_Bool systemPressed;
+} SGE_KeyEvent;
 
 typedef union {
-    SGE_TextEntered textEntered;
-    SGE_KeyPressed keyPressed;
-    SGE_KeyReleased keyReleased;
+    SGE_TextEnteredEvent text;
+    SGE_KeyEvent key;
 } SGE_Event;
 
 typedef struct {

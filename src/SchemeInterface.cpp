@@ -312,19 +312,19 @@ SCM_DEFINE (PollEvents, "sge-poll-events", 0, 0, 0,
             return
                 scm_cons(scm_string_to_symbol(
                              scm_from_latin1_string("sge-event-text")),
-                         scm_from_uint32(holder.event.textEntered.unicode));
+                         scm_from_uint32(holder.event.text.unicode));
 
         case SGE_EventCode_KeyPressed:
             return
                 scm_cons(scm_string_to_symbol(
                              scm_from_latin1_string("sge-event-key-pressed")),
-                         scm_from_uint(holder.event.keyPressed.key));
+                         scm_from_uint(holder.event.key.keyCode));
 
         case SGE_EventCode_KeyReleased:
             return
                 scm_cons(scm_string_to_symbol(
                              scm_from_latin1_string("sge-event-key-released")),
-                         scm_from_uint(holder.event.keyReleased.key));
+                         scm_from_uint(holder.event.key.keyCode));
         }
     }
     return SCM_EOL;

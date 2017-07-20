@@ -67,7 +67,7 @@ struct Engine {
             case sf::Event::TextEntered:
                 if (recordEvents) {
                     SGE_EventHolder holder;
-                    holder.event.textEntered.unicode = event.text.unicode;
+                    holder.event.text.unicode = event.text.unicode;
                     holder.code = SGE_EventCode_TextEntered;
                     RecordEvent(holder);
                 }
@@ -76,7 +76,11 @@ struct Engine {
             case sf::Event::KeyPressed:
                 if (recordEvents) {
                     SGE_EventHolder holder;
-                    holder.event.keyPressed.key = event.key.code;
+                    holder.event.key.keyCode = event.key.code;
+                    holder.event.key.altPressed = (SGE_Bool)event.key.alt;
+                    holder.event.key.controlPressed = (SGE_Bool)event.key.control;
+                    holder.event.key.shiftPressed = (SGE_Bool)event.key.shift;
+                    holder.event.key.systemPressed = (SGE_Bool)event.key.system;
                     holder.code = SGE_EventCode_KeyPressed;
                     RecordEvent(holder);
                 }
@@ -85,7 +89,11 @@ struct Engine {
             case sf::Event::KeyReleased:
                 if (recordEvents) {
                     SGE_EventHolder holder;
-                    holder.event.keyReleased.key = event.key.code;
+                    holder.event.key.keyCode = event.key.code;
+                    holder.event.key.altPressed = (SGE_Bool)event.key.alt;
+                    holder.event.key.controlPressed = (SGE_Bool)event.key.control;
+                    holder.event.key.shiftPressed = (SGE_Bool)event.key.shift;
+                    holder.event.key.systemPressed = (SGE_Bool)event.key.system;
                     holder.code = SGE_EventCode_KeyReleased;
                     RecordEvent(holder);
                 }
