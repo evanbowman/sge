@@ -1,4 +1,4 @@
-#include "SGE.h"
+#include "../include/SGE.h"
 
 #include <atomic>
 #include <array>
@@ -15,8 +15,8 @@
 #include "Entity.hpp"
 #include "PooledHashmap.hpp"
 #include "Renderer.hpp"
+#include "ResourcePath.hpp"
 #include "Singleton.hpp"
-#include "SchemeInterface.hpp"
 #include "Sync.hpp"
 #include "Types.hpp"
 #include "Timer.hpp"
@@ -33,6 +33,7 @@ namespace errors {
 using EntityMap = std::unordered_map<SGE_UUID, EntityRef>;
 using TimerMap = std::unordered_map<SGE_UUID, SteadyTimer>;
 using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
+using EventQueue = std::queue<SGE_EventHolder>;
 
 // TODO: Needs synchronization: Timers, Camera
 
@@ -47,11 +48,11 @@ struct Engine {
                renderer(window, camera),
                m_uidCounter(0) {
         window.setMouseCursorVisible(false);
-        window.setVerticalSyncEnabled(true);
+        window.setVerticalSyncEnabled(true);        
     }
 
     void RecordEvent(const SGE_EventHolder& holder) {
-        events.Get([&holder](std::queue<SGE_EventHolder>& eventsQueue) {
+        m_events.Get([&holder](std::queue<SGE_EventHolder>& eventsQueue) {
             eventsQueue.push(holder);
         });
     }
@@ -77,10 +78,6 @@ struct Engine {
                 if (recordEvents) {
                     SGE_EventHolder holder;
                     holder.event.key.keyCode = event.key.code;
-                    holder.event.key.altPressed = (SGE_Bool)event.key.alt;
-                    holder.event.key.controlPressed = (SGE_Bool)event.key.control;
-                    holder.event.key.shiftPressed = (SGE_Bool)event.key.shift;
-                    holder.event.key.systemPressed = (SGE_Bool)event.key.system;
                     holder.code = SGE_EventCode_KeyPressed;
                     RecordEvent(holder);
                 }
@@ -90,10 +87,6 @@ struct Engine {
                 if (recordEvents) {
                     SGE_EventHolder holder;
                     holder.event.key.keyCode = event.key.code;
-                    holder.event.key.altPressed = (SGE_Bool)event.key.alt;
-                    holder.event.key.controlPressed = (SGE_Bool)event.key.control;
-                    holder.event.key.shiftPressed = (SGE_Bool)event.key.shift;
-                    holder.event.key.systemPressed = (SGE_Bool)event.key.system;
                     holder.code = SGE_EventCode_KeyReleased;
                     RecordEvent(holder);
                 }
@@ -115,11 +108,7 @@ struct Engine {
         textureRequests.clear();
     }
 
-    void Run() {
-        running = true;
-        std::thread logicThread([] {
-            scheme::Start();
-        });
+    void GraphicsLoop() {
         SteadyTimer gfxDeltaTimer;
         while (window.isOpen()) {
             HandleTextureRequests();
@@ -142,6 +131,14 @@ struct Engine {
                 window.close();
             }
         }
+    }
+    
+    void Run(std::function<void()> entry) {
+        running = true;
+        std::thread logicThread([entry] {
+            entry();
+        });
+        GraphicsLoop();
         logicThread.join();
     }
 
@@ -156,7 +153,6 @@ struct Engine {
     std::mutex textureReqMtx;
     std::vector<std::shared_ptr<TextureRequest>> textureRequests;
     TimerMap timers;
-    Sync<std::queue<SGE_EventHolder>> events;
 
     // Note: shallow copy only. Pass a statically allocated string.
     void PushError(const char* err) {
@@ -164,11 +160,19 @@ struct Engine {
         m_errors.push_back(err);
     }
 
+    bool HasError() {
+        std::lock_guard<std::mutex> lock(m_errorsMtx);
+        return m_errors.empty();
+    }
+
     const char* PollError() {
         std::lock_guard<std::mutex> lock(m_errorsMtx);
-        const auto lastError = m_errors.back();
-        m_errors.pop_back();
-        return lastError;
+        if (!m_errors.empty()) {
+            const auto lastError = m_errors.back();
+            m_errors.pop_back();
+            return lastError;
+        }
+        return nullptr;
     }
 
     void WithEntities(std::function<void(EntityMap&)> procedure) {
@@ -179,10 +183,15 @@ struct Engine {
         m_animations.Get(procedure);
     }
 
+    void WithEvents(std::function<void(EventQueue&)> procedure) {
+        m_events.Get(procedure);
+    }
+
     SGE_UUID NewUUID() { return ++m_uidCounter; }
 
 private:
     Sync<EntityMap> m_entities;
+    Sync<std::queue<SGE_EventHolder>> m_events;
     Sync<AnimationMap> m_animations;
     std::vector<const char*> m_errors;
     std::mutex m_errorsMtx;
@@ -266,7 +275,8 @@ extern "C" {
                 clone->SetPosition(foundSrc->GetPosition());
                 std::unique_ptr<GraphicsComponent> gfxCompClone;
                 if (auto srcGfxComp = foundSrc->GetGraphicsComponent()) {
-                    gfxCompClone = std::unique_ptr<GraphicsComponent>(srcGfxComp->Clone());
+                    gfxCompClone =
+                        std::unique_ptr<GraphicsComponent>(srcGfxComp->Clone());
                     if (!gfxCompClone) {
                         return;
                     }
@@ -334,7 +344,8 @@ extern "C" {
                     g_engine.PushError(errors::gfxCompNotAnim);
                     return;
                 }
-                reinterpret_cast<AnimationComponent*>(gfxComp)->SetKeyframe(keyframe);
+                reinterpret_cast<AnimationComponent*>(gfxComp)->
+                    SetKeyframe(keyframe);
                 rc = SGE_True;
             }
         });
@@ -520,7 +531,7 @@ extern "C" {
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
         SGE_Bool ret = SGE_False;
-        g_engine.events.Get([&ret, event](std::queue<SGE_EventHolder>& eventsQueue) {
+        g_engine.WithEvents([&ret, event](EventQueue& eventsQueue) {
             if (!eventsQueue.empty()) {
                 *event = eventsQueue.front();
                 eventsQueue.pop();
@@ -534,6 +545,11 @@ extern "C" {
         g_engine.recordEvents = enabled;
     }
 
+    SGE_Bool SGE_Main(void(*entryFn)()) {
+        g_engine.Run(entryFn);
+        return static_cast<SGE_Bool>(g_engine.HasError());
+    }
+    
     const char* SGE_GetError() {
         return g_engine.PollError();
     }
@@ -541,29 +557,8 @@ extern "C" {
     void SGE_Exit() {
         g_engine.running = false;
     }
+
+    const char* SGE_PackagePath() {
+        return PackagePath().c_str();
+    }
 }
-
-// #include "cxxopts/cxxopts.hpp"
-#include "ResourcePath.hpp"
-
-int main(int argc, char** argv) {
-    // cxxopts::Options options("sge", "Simple 2d Game Engine");
-    // options.add_options()
-    //     ("p,package", "Run on a specific directory",
-    //      cxxopts::value<std::string>())
-    //     ("h,help", "display this message");
-    // try {
-    //     options.parse(argc, argv);
-    // } catch (const std::exception& ex) {
-    //     std::cerr << ex.what() << std::endl;
-    //     return EXIT_FAILURE;
-    // }
-    // if (options.count("p")) {
-    //     ConfigureResourcePath(options["p"].as<std::string>());
-    // }
-    ConfigureResourcePath("/Users/evan_bowman/Documents/platformer/");
-    Singleton<Engine>::Instance().Run();
-    return EXIT_SUCCESS;
-}
-
-

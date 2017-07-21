@@ -55,10 +55,6 @@ typedef struct {
 
 typedef struct {
     int keyCode;
-    SGE_Bool altPressed;
-    SGE_Bool controlPressed;
-    SGE_Bool shiftPressed;
-    SGE_Bool systemPressed;
 } SGE_KeyEvent;
 
 typedef union {
@@ -114,9 +110,11 @@ extern "C" {
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event);
     void SGE_RecordEvents(SGE_Bool enabled);
+
+    SGE_Bool SGE_Main(void(*entryFn)());
     
     const char* SGE_GetError();
-
+    
     void SGE_Exit();
     
 #ifdef __cplusplus

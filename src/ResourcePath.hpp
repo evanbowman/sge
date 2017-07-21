@@ -2,6 +2,8 @@
 
 #include <string>
 
-void ConfigureResourcePath(const std::string& path);
+void ConfigurePackagePath(const std::string& path);
 
 const std::string& ResourcePath();
+
+const std::string& PackagePath();

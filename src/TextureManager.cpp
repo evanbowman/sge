@@ -23,7 +23,7 @@ sf::Texture& TextureManager::LoadTexture(const std::string& fileName) {
     auto texture = m_textures.find(fileName);
     if (texture == m_textures.end()) {
         auto& texture = (m_textures[fileName] = sf::Texture{});
-        if (!texture.loadFromFile(ResourcePath() + "textures/" + fileName)) {
+        if (!texture.loadFromFile(PackagePath() + "textures/" + fileName)) {
             m_textures.erase(fileName);
             throw std::runtime_error("Missing texture");
         }

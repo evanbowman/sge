@@ -1,1 +1,0 @@
-guile-snarf -o snarf.x SchemeInterface.cpp -std=c++14 -I /usr/local/include/guile/2.2/

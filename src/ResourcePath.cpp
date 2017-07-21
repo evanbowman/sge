@@ -62,11 +62,15 @@ std::string DefaultPathImpl() {
 
 namespace {
 std::pair<std::string, bool> cachedPath;
+std::string packagePath;
 }
 
-void ConfigureResourcePath(const std::string& path) {
-    cachedPath.first = path;
-    cachedPath.second = true;
+void ConfigurePackagePath(const std::string& path) {
+    packagePath = path;
+}
+
+const std::string& PackagePath() {
+    return packagePath;
 }
 
 const std::string& ResourcePath() {
