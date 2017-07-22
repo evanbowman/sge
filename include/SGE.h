@@ -77,32 +77,32 @@ extern "C" {
 
     SGE_UIVec2 SGE_GetWindowSize();
 
-    SGE_Bool SGE_CreateEntity(SGE_UUID* entity);
-    SGE_Bool SGE_CloneEntity(SGE_UUID src, SGE_UUID* dest);
-    SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib);
-    SGE_Bool SGE_SetEntityAnimation(SGE_UUID entity, SGE_UUID animation);
-    SGE_Bool SGE_SetEntityKeyframe(SGE_UUID entity, SGE_Keyframe keyframe);
-    SGE_Bool SGE_SetEntityPosition(SGE_UUID entity, SGE_Vec2 pos);
-    SGE_Bool SGE_SetEntityScale(SGE_UUID entity, SGE_Vec2 scale);
-    SGE_Bool SGE_SetEntityBlendMode(SGE_UUID entity, SGE_BlendMode mode);
-    SGE_Bool SGE_SetEntityZOrder(SGE_UUID entity, int zOrder);
-    SGE_Bool SGE_SetEntityColor(SGE_UUID entity, SGE_Color color);
-    SGE_Bool SGE_GetEntityPosition(SGE_UUID entity, SGE_Vec2* position);
-    SGE_Bool SGE_GetEntityKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe);
-    SGE_Bool SGE_RemoveEntity(SGE_UUID entity);
-    SGE_Bool SGE_RemoveEntityAttribute(SGE_UUID entity, SGE_Attribute attrib);
+    SGE_Bool SGE_EntityCreate(SGE_UUID* entity);
+    SGE_Bool SGE_EntityClone(SGE_UUID src, SGE_UUID* dest);
+    SGE_Bool SGE_EntityAddAttribute(SGE_UUID entity, SGE_Attribute attrib);
+    SGE_Bool SGE_EntitySetAnimation(SGE_UUID entity, SGE_UUID animation);
+    SGE_Bool SGE_EntitySetKeyframe(SGE_UUID entity, SGE_Keyframe keyframe);
+    SGE_Bool SGE_EntitySetPosition(SGE_UUID entity, SGE_Vec2 pos);
+    SGE_Bool SGE_EntitySetScale(SGE_UUID entity, SGE_Vec2 scale);
+    SGE_Bool SGE_EntitySetBlendMode(SGE_UUID entity, SGE_BlendMode mode);
+    SGE_Bool SGE_EntitySetZOrder(SGE_UUID entity, int zOrder);
+    SGE_Bool SGE_EntitySetColor(SGE_UUID entity, SGE_Color color);
+    SGE_Bool SGE_EntityGetPosition(SGE_UUID entity, SGE_Vec2* position);
+    SGE_Bool SGE_EntityGetKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe);
+    SGE_Bool SGE_EntityRemove(SGE_UUID entity);
+    SGE_Bool SGE_EntityRemoveAttribute(SGE_UUID entity, SGE_Attribute attrib);
 
-    SGE_Bool SGE_SetCameraTarget(SGE_UUID entity);
-    void SGE_SetCameraCenter(SGE_Vec2 center);
-    void SGE_SetCameraSpringiness(float springiness);
-    void SGE_SetCameraZoom(float zoom);
-    SGE_Vec2 SGE_GetCameraViewSize();
+    SGE_Bool SGE_CameraSetTarget(SGE_UUID entity);
+    void SGE_CameraSetCenter(SGE_Vec2 center);
+    void SGE_CameraSetSpringiness(float springiness);
+    void SGE_CameraSetZoom(float zoom);
+    SGE_Vec2 SGE_CameraGetViewSize();
     
-    SGE_Bool SGE_CreateTimer(SGE_UUID* timer);
-    SGE_Bool SGE_ResetTimer(SGE_UUID timer, SGE_USec* elapsed);
-    SGE_Bool SGE_RemoveTimer(SGE_UUID timer);
+    SGE_Bool SGE_TimerCreate(SGE_UUID* timer);
+    SGE_Bool SGE_TimerReset(SGE_UUID timer, SGE_USec* elapsed);
+    SGE_Bool SGE_TimerRemove(SGE_UUID timer);
 
-    SGE_Bool SGE_CreateAnimation(SGE_UUID* animation,
+    SGE_Bool SGE_AnimationCreate(SGE_UUID* animation,
                                  const char* sourceFile,
                                  SGE_IVec2 start,
                                  SGE_IVec2 frameSize,
@@ -112,8 +112,13 @@ extern "C" {
     void SGE_RecordEvents(SGE_Bool enabled);
 
     SGE_Bool SGE_Main(void(*entryFn)());
+
+    void SGE_Microsleep(SGE_USec sleepDuration);
     
     const char* SGE_GetError();
+
+    const char* SGE_ResourcePath();
+    void SGE_ConfigureResourcePath(const char* path);
     
     void SGE_Exit();
     

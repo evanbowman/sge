@@ -249,7 +249,7 @@ extern "C" {
         };
     }
 
-    SGE_Bool SGE_CreateEntity(SGE_UUID* entity) {
+    SGE_Bool SGE_EntityCreate(SGE_UUID* entity) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
             auto created = std::make_shared<Entity>();
@@ -263,7 +263,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_CloneEntity(SGE_UUID src, SGE_UUID* dest) {
+    SGE_Bool SGE_EntityClone(SGE_UUID src, SGE_UUID* dest) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, src, dest](EntityMap& entities) {
             if (auto foundSrc = FindEntity(entities, src)) {
@@ -291,7 +291,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_AddEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+    SGE_Bool SGE_EntityAddAttribute(SGE_UUID entity, SGE_Attribute attrib) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -302,7 +302,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_RemoveEntityAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+    SGE_Bool SGE_EntityRemoveAttribute(SGE_UUID entity, SGE_Attribute attrib) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -313,7 +313,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityAnimation(SGE_UUID entity, SGE_UUID animation) {
+    SGE_Bool SGE_EntitySetAnimation(SGE_UUID entity, SGE_UUID animation) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, animation](EntityMap& entities) {
             auto foundEntity = FindEntity(entities, entity);
@@ -335,7 +335,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityKeyframe(SGE_UUID entity, SGE_Keyframe keyframe) {
+    SGE_Bool SGE_EntitySetKeyframe(SGE_UUID entity, SGE_Keyframe keyframe) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, keyframe](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -352,7 +352,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityPosition(SGE_UUID entity, SGE_Vec2 pos) {
+    SGE_Bool SGE_EntitySetPosition(SGE_UUID entity, SGE_Vec2 pos) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &pos](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -363,7 +363,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityScale(SGE_UUID entity, SGE_Vec2 scale) {
+    SGE_Bool SGE_EntitySetScale(SGE_UUID entity, SGE_Vec2 scale) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &scale](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -374,7 +374,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityBlendMode(SGE_UUID entity, SGE_BlendMode mode) {
+    SGE_Bool SGE_EntitySetBlendMode(SGE_UUID entity, SGE_BlendMode mode) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, mode](EntityMap& entities) {
             static const std::array<sf::BlendMode, 4> modes {{
@@ -390,7 +390,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityZOrder(SGE_UUID entity, int zOrder) {
+    SGE_Bool SGE_EntitySetZOrder(SGE_UUID entity, int zOrder) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, zOrder](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -401,7 +401,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetEntityColor(SGE_UUID entity, SGE_Color color) {
+    SGE_Bool SGE_EntitySetColor(SGE_UUID entity, SGE_Color color) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &color](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -412,7 +412,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_GetEntityPosition(SGE_UUID entity, SGE_Vec2* position) {
+    SGE_Bool SGE_EntityGetPosition(SGE_UUID entity, SGE_Vec2* position) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, position](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -424,7 +424,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_GetEntityKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe) {
+    SGE_Bool SGE_EntityGetKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, keyframe](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -439,7 +439,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_RemoveEntity(SGE_UUID entity) {
+    SGE_Bool SGE_EntityRemove(SGE_UUID entity) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
             auto entityIter = entities.find(entity);
@@ -452,7 +452,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SetCameraTarget(SGE_UUID entity) {
+    SGE_Bool SGE_CameraSetTarget(SGE_UUID entity) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
             if (auto entityRef = FindEntityRef(entities, entity)) {
@@ -463,32 +463,32 @@ extern "C" {
         return rc;
     }
 
-    void SGE_SetCameraCenter(SGE_Vec2 center) {
+    void SGE_CameraSetCenter(SGE_Vec2 center) {
         g_engine.camera.SetCenter({ center.x, center.y });
     }
 
-    void SGE_SetCameraSpringiness(float springiness) {
+    void SGE_CameraSetSpringiness(float springiness) {
         g_engine.camera.SetSpringiness(springiness);
     }
 
-    void SGE_SetCameraZoom(float zoom) {
+    void SGE_CameraSetZoom(float zoom) {
         g_engine.camera.SetZoom(zoom);
     }
 
-    SGE_Vec2 SGE_GetCameraViewSize() {
+    SGE_Vec2 SGE_CameraGetViewSize() {
         const auto& view = g_engine.camera.GetView();
         const auto& viewSize = view.getSize();
         return { viewSize.x, viewSize.y };
     }
 
-    SGE_Bool SGE_CreateTimer(SGE_UUID* timer) {
+    SGE_Bool SGE_TimerCreate(SGE_UUID* timer) {
         const auto uuid = g_engine.NewUUID();
         g_engine.timers[uuid] = SteadyTimer{};
         *timer = uuid;
         return SGE_True;
     }
 
-    SGE_Bool SGE_ResetTimer(SGE_UUID timer, SGE_USec* elapsed) {
+    SGE_Bool SGE_TimerReset(SGE_UUID timer, SGE_USec* elapsed) {
         auto timerIter = g_engine.timers.find(timer);
         if (timerIter != g_engine.timers.end()) {
             *elapsed = timerIter->second.Reset();
@@ -497,7 +497,7 @@ extern "C" {
         return SGE_False;
     }
 
-    SGE_Bool SGE_RemoveTimer(SGE_UUID timer) {
+    SGE_Bool SGE_TimerRemove(SGE_UUID timer) {
         auto timerIter = g_engine.timers.find(timer);
         if (timerIter != g_engine.timers.end()) {
             g_engine.timers.erase(timerIter);
@@ -506,7 +506,7 @@ extern "C" {
         return SGE_False;
     }
 
-    SGE_Bool SGE_CreateAnimation(SGE_UUID* animation,
+    SGE_Bool SGE_AnimationCreate(SGE_UUID* animation,
                                  const char* sourceFile,
                                  SGE_IVec2 start,
                                  SGE_IVec2 frameSize,
@@ -549,16 +549,24 @@ extern "C" {
         g_engine.Run(entryFn);
         return static_cast<SGE_Bool>(g_engine.HasError());
     }
+
+    void SGE_Microsleep(SGE_USec sleepTime) {
+        std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
+    }
+    
+    const char* SGE_ResourcePath() {
+        return ResourcePath().c_str();
+    }
+
+    void SGE_ConfigureResourcePath(const char* path) {
+        ConfigureResourcePath(path);
+    }
     
     const char* SGE_GetError() {
         return g_engine.PollError();
     }
-
+   
     void SGE_Exit() {
         g_engine.running = false;
-    }
-
-    const char* SGE_PackagePath() {
-        return PackagePath().c_str();
     }
 }

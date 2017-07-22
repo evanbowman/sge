@@ -4,7 +4,7 @@ namespace {
 #if defined(_WIN32) or defined(_WIN64)
 #include <Windows.h>
 
-std::string DefaultPathImpl() {
+std::string ResourcePathImpl() {
     HMODULE hModule = GetModuleHandleW(nullptr);
     char buffer[MAX_PATH];
     GetModuleFileName(hModule, buffer, MAX_PATH);
@@ -19,7 +19,7 @@ std::string DefaultPathImpl() {
 #include <objc/objc-runtime.h>
 #include <objc/objc.h>
 
-std::string DefaultPathImpl() {
+std::string ResourcePathImpl() {
     id pool = reinterpret_cast<id>(objc_getClass("NSAutoreleasePool"));
     std::string rpath;
     if (!pool) {
@@ -36,8 +36,6 @@ std::string DefaultPathImpl() {
         id path = objc_msgSend(bundle, sel_registerName("resourcePath"));
         rpath = reinterpret_cast<const char*>(
                     objc_msgSend(path, sel_registerName("UTF8String"))) +
-            /* Fixme: if ever bundling this project, don't append res/
-             * because NSBundle will automatically find the right dir. */
                 std::string("/");
     }
     objc_msgSend(pool, sel_registerName("drain"));
@@ -48,7 +46,7 @@ std::string DefaultPathImpl() {
 #include <linux/limits.h>
 #include <unistd.h>
 
-std::string DefaultPathImpl() {
+std::string ResourcePathImpl() {
     char buffer[PATH_MAX];
     [[gnu::unused]] const std::size_t bytesRead =
         readlink("/proc/self/exe", buffer, sizeof(buffer));
@@ -62,20 +60,16 @@ std::string DefaultPathImpl() {
 
 namespace {
 std::pair<std::string, bool> cachedPath;
-std::string packagePath;
 }
 
-void ConfigurePackagePath(const std::string& path) {
-    packagePath = path;
-}
-
-const std::string& PackagePath() {
-    return packagePath;
+void ConfigureResourcePath(const std::string& path) {
+    cachedPath.first = path;
+    cachedPath.second = true;
 }
 
 const std::string& ResourcePath() {
     if (!cachedPath.second) {
-        cachedPath.first = DefaultPathImpl();
+        cachedPath.first = ResourcePathImpl();
         cachedPath.second = true;
     }
     return cachedPath.first;

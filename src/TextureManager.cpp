@@ -1,5 +1,4 @@
 #include "TextureManager.hpp"
-#include "ResourcePath.hpp"
 
 TextureRequest::TextureRequest(const std::string& fileName) :
     m_fileName(fileName), m_result(nullptr) {}
@@ -19,12 +18,12 @@ void TextureManager::Accept(TextureRequest& req) {
     req.m_result = &LoadTexture(req.m_fileName);
 }
 
-sf::Texture& TextureManager::LoadTexture(const std::string& fileName) {
-    auto texture = m_textures.find(fileName);
+sf::Texture& TextureManager::LoadTexture(const std::string& path) {
+    auto texture = m_textures.find(path);
     if (texture == m_textures.end()) {
-        auto& texture = (m_textures[fileName] = sf::Texture{});
-        if (!texture.loadFromFile(PackagePath() + "textures/" + fileName)) {
-            m_textures.erase(fileName);
+        auto& texture = (m_textures[path] = sf::Texture{});
+        if (!texture.loadFromFile(path)) {
+            m_textures.erase(path);
             throw std::runtime_error("Missing texture");
         }
         return texture;
