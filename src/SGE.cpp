@@ -39,8 +39,7 @@ using EventQueue = std::queue<SGE_EventHolder>;
 
 struct Engine {
 
-    Engine() : recordEvents(false),
-               running(false),
+    Engine() : running(false),
                window(sf::VideoMode::getDesktopMode(),
                       "SGE",
                       sf::Style::Fullscreen),
@@ -65,32 +64,29 @@ struct Engine {
                 window.close();
                 break;
 
-            case sf::Event::TextEntered:
-                if (recordEvents) {
-                    SGE_EventHolder holder;
-                    holder.event.text.unicode = event.text.unicode;
-                    holder.code = SGE_EventCode_TextEntered;
-                    RecordEvent(holder);
-                }
+            case sf::Event::TextEntered: {
+                SGE_EventHolder holder;
+                holder.event.text.unicode = event.text.unicode;
+                holder.code = SGE_EventCode_TextEntered;
+                RecordEvent(holder);
                 break;
+            }
 
-            case sf::Event::KeyPressed:
-                if (recordEvents) {
-                    SGE_EventHolder holder;
-                    holder.event.key.keyCode = event.key.code;
-                    holder.code = SGE_EventCode_KeyPressed;
-                    RecordEvent(holder);
-                }
+            case sf::Event::KeyPressed: {
+                SGE_EventHolder holder;
+                holder.event.key.keyCode = (SGE_KeyCode)event.key.code;
+                holder.code = SGE_EventCode_KeyPressed;
+                RecordEvent(holder);
                 break;
+            }
 
-            case sf::Event::KeyReleased:
-                if (recordEvents) {
-                    SGE_EventHolder holder;
-                    holder.event.key.keyCode = event.key.code;
-                    holder.code = SGE_EventCode_KeyReleased;
-                    RecordEvent(holder);
-                }
+            case sf::Event::KeyReleased: {
+                SGE_EventHolder holder;
+                holder.event.key.keyCode = (SGE_KeyCode)event.key.code;
+                holder.code = SGE_EventCode_KeyReleased;
+                RecordEvent(holder);
                 break;
+            }
             }
         }
     }
@@ -142,7 +138,6 @@ struct Engine {
         logicThread.join();
     }
 
-    bool recordEvents;
     std::atomic<bool> running;
     sf::RenderWindow window;
     Camera camera;
@@ -539,10 +534,6 @@ extern "C" {
             }
         });
         return ret;
-    }
-
-    void SGE_RecordEvents(SGE_Bool enabled) {
-        g_engine.recordEvents = enabled;
     }
 
     SGE_Bool SGE_Main(void(*entryFn)()) {
