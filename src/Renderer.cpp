@@ -5,32 +5,37 @@
 #include "Camera.hpp"
 #include "Utility.hpp"
 
-Renderer::Renderer(sf::RenderWindow& window, Camera& camera) :
-    m_windowRef(window),
-    m_cameraRef(camera) {}
+void Renderer::Configure(const Camera& camera) {
+    m_config.cameraViewBounds = camera.GetBounds();
+    m_config.cameraViewCenter = camera.GetView().getCenter();
+    m_config.cameraViewSize = camera.GetView().getSize();
+}
 
 void Renderer::Visit(Entity& entity, AnimationComponent& comp) {
     auto keyframe = comp.GetAnimation()->GetKeyframe(comp.GetKeyframe());
     if (entity.HasAttribute(SGE_Attr_PositionAbsolute)) {
-        keyframe.setPosition(AbsoluteTransform(m_cameraRef.GetView(),
+        keyframe.setPosition(AbsoluteTransform(m_config.cameraViewCenter,
+                                               m_config.cameraViewSize,
                                                entity.GetPosition()));
     } else {
         keyframe.setPosition(entity.GetPosition());
     }
-    keyframe.setColor(comp.GetColor());
     keyframe.setScale(comp.GetScale());
-    m_drawList.push_back({
-        keyframe, comp.GetRenderStates(), comp.GetZOrder()
-    });
+    if (m_config.cameraViewBounds.intersects(keyframe.getGlobalBounds())) {
+        keyframe.setColor(comp.GetColor());
+        m_displayList.push_back({
+            keyframe, comp.GetRenderStates(), comp.GetZOrder()
+        });
+    }
 }
 
-void Renderer::Display() {
-    std::sort(m_drawList.begin(), m_drawList.end(),
+void Renderer::Display(sf::RenderWindow& window) {
+    std::sort(m_displayList.begin(), m_displayList.end(),
               [](const RenderTask& lhs, const RenderTask& rhs) {
                   return lhs.zOrder < rhs.zOrder;
               });
-    for (auto& element : m_drawList) {
-        m_windowRef.draw(element.sprite, element.renderStates);
+    for (const auto& element : m_displayList) {
+        window.draw(element.sprite, element.renderStates);
     }
-    m_drawList.clear();
+    m_displayList.clear();
 }

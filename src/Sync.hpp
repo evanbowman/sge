@@ -6,7 +6,8 @@
 template <typename T>
 class Sync {
 public:
-    void Get(std::function<void(T&)> handler) {
+    template <typename F>
+    void Get(F&& handler) {
         std::lock_guard<std::mutex> lock(m_mutex);
         handler(m_data);
     }

@@ -44,3 +44,12 @@ void Camera::SetZoom(float zoom) {
     m_view.setSize({ windowSize.x * (1.f / zoom),
                      windowSize.y * (1.f / zoom) });
 }
+
+FloatRect Camera::GetBounds() const {
+    const auto& center = m_view.getCenter();
+    const auto& size = m_view.getSize();
+    return {
+        { center.x - size.x / 2.f, center.y - size.y / 2.f },
+        size
+    };
+}

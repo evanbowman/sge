@@ -3,6 +3,7 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
+#include "BB.hpp"
 #include "Entity.hpp"
 
 class Camera {
@@ -14,6 +15,7 @@ public:
     const sf::View& GetView() const;
     void SetCenter(const Vec2& center);
     void SetZoom(float zoom);
+    FloatRect GetBounds() const;
     
 private:
     sf::RenderWindow& m_window;

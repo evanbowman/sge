@@ -3,7 +3,7 @@
 Animation::Animation() {}
 
 Animation::Animation(const sf::Texture& texture,
-                     const Rect& keyframeInfo,
+                     const IntRect& keyframeInfo,
                      const Vec2& origin) :
     m_sprite(texture),
     m_keyframeInfo(keyframeInfo) {

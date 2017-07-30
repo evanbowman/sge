@@ -1,10 +1,9 @@
-#include "../include/SGE.h"
+#include "../include/SGE/SGE.h"
 
 #include <atomic>
 #include <array>
 #include <SFML/Graphics.hpp>
 #include <list>
-#include <unordered_map>
 #include <thread>
 #include <iostream>
 #include <queue>
@@ -13,7 +12,6 @@
 #include "Camera.hpp"
 #include "CollisionChecker.hpp"
 #include "Entity.hpp"
-#include "PooledHashmap.hpp"
 #include "Renderer.hpp"
 #include "ResourcePath.hpp"
 #include "Singleton.hpp"
@@ -22,29 +20,30 @@
 #include "Timer.hpp"
 #include "TextureManager.hpp"
 #include "Utility.hpp"
+#include <sparsepp/spp.h>
 
 namespace errors {
     static const auto badEntityHandle = "Bad entity handle";
     static const auto badAnimationHandle = "Bad animation handle";
     static const auto gfxCompNotAnim = "Gfx component is not an animation";
     static const auto missingGfxComp = "Entity has no graphics component";
+    static const auto badBM = "Invalid blend mode id";
 }
 
-using EntityMap = std::unordered_map<SGE_UUID, EntityRef>;
-using TimerMap = std::unordered_map<SGE_UUID, SteadyTimer>;
+// TODO: sparse_hash supposedly needs a special allocator for
+// MS Windows.
+using EntityMap = spp::sparse_hash_map<SGE_UUID, EntityRef>;
+using TimerMap = spp::sparse_hash_map<SGE_UUID, SteadyTimer>;
 using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
 using EventQueue = std::queue<SGE_EventHolder>;
 
-// TODO: Needs synchronization: Timers, Camera
-
-struct Engine {
-
-    Engine() : running(false),
-               window(sf::VideoMode::getDesktopMode(),
+class Engine {
+public:
+    Engine() : window(sf::VideoMode::getDesktopMode(),
                       "SGE",
                       sf::Style::Fullscreen),
                camera(window),
-               renderer(window, camera),
+               m_running(false),
                m_uidCounter(0) {
         window.setMouseCursorVisible(false);
         window.setVerticalSyncEnabled(true);        
@@ -62,6 +61,7 @@ struct Engine {
             switch (event.type) {
             case sf::Event::Closed:
                 window.close();
+                m_running = false;
                 break;
 
             case sf::Event::TextEntered: {
@@ -91,17 +91,21 @@ struct Engine {
         }
     }
 
+    using TextureReqList = std::vector<std::shared_ptr<TextureRequest>>;
+    
     void EnqueueTextureRequest(std::shared_ptr<TextureRequest> req) {
-        std::lock_guard<std::mutex> lk(textureReqMtx);
-        textureRequests.push_back(req);
+        m_textureRequests.Get([&](TextureReqList& requests) {
+            requests.push_back(req);
+        });
     }
 
     void HandleTextureRequests() {
-        std::lock_guard<std::mutex> lk(textureReqMtx);
-        for (auto & req : textureRequests) {
-            textureMgr.Accept(*req);
-        }
-        textureRequests.clear();
+        m_textureRequests.Get([&](TextureReqList& requests) {
+            for (auto & req : requests) {
+                textureMgr.Accept(*req);
+            }
+            requests.clear();
+        });
     }
 
     void GraphicsLoop() {
@@ -110,6 +114,7 @@ struct Engine {
             HandleTextureRequests();
             EventLoop();
             camera.Update(gfxDeltaTimer.Reset());
+            renderer.Configure(camera);
             m_entities.Get([this](EntityMap& entities) {
                 for (auto& entityNode : entities) {
                     auto& entity = entityNode.second;
@@ -121,16 +126,16 @@ struct Engine {
                 }
             });
             window.clear(refreshColor);
-            renderer.Display();
+            renderer.Display(window);
             window.display();
-            if (!running) {
+            if (!m_running) {
                 window.close();
             }
         }
     }
     
     void Run(std::function<void()> entry) {
-        running = true;
+        m_running = true;
         std::thread logicThread([entry] {
             entry();
         });
@@ -138,16 +143,12 @@ struct Engine {
         logicThread.join();
     }
 
-    std::atomic<bool> running;
     sf::RenderWindow window;
     Camera camera;
     Renderer renderer;
     CollisionChecker collisionChecker;
     sf::Color refreshColor;
     TextureManager textureMgr;
-    std::mutex textureReqMtx;
-    std::vector<std::shared_ptr<TextureRequest>> textureRequests;
-    TimerMap timers;
 
     // Note: shallow copy only. Pass a statically allocated string.
     void PushError(const char* err) {
@@ -170,24 +171,38 @@ struct Engine {
         return nullptr;
     }
 
-    void WithEntities(std::function<void(EntityMap&)> procedure) {
+    template <typename F>
+    void WithEntities(F&& procedure) {
         m_entities.Get(procedure);
     }
 
-    void WithAnimations(std::function<void(AnimationMap&)> procedure) {
+    template <typename F>
+    void WithAnimations(F&& procedure) {
         m_animations.Get(procedure);
     }
 
-    void WithEvents(std::function<void(EventQueue&)> procedure) {
+    template <typename F>
+    void WithEvents(F&& procedure) {
         m_events.Get(procedure);
     }
 
+    template <typename F>
+    void WithTimers(F&& procedure) {
+        m_timers.Get(procedure);
+    }
+    
     SGE_UUID NewUUID() { return ++m_uidCounter; }
 
+    bool IsRunning() const { return m_running.load(); }
+    void Exit() { m_running = false; }
+    
 private:
     Sync<EntityMap> m_entities;
     Sync<std::queue<SGE_EventHolder>> m_events;
     Sync<AnimationMap> m_animations;
+    Sync<TimerMap> m_timers;
+    Sync<TextureReqList> m_textureRequests;
+    std::atomic_bool m_running;
     std::vector<const char*> m_errors;
     std::mutex m_errorsMtx;
     std::atomic<SGE_UUID> m_uidCounter;
@@ -225,23 +240,28 @@ namespace {
         }
         return entityIter->second;
     }
-
 }
 
 extern "C" {
-    SGE_Bool SGE_IsRunning() {
-        return static_cast<SGE_Bool>(g_engine.window.isOpen());
+    SGE_Bool SGE_Main(void(*entryFn)()) {
+        g_engine.Run(entryFn);
+        return static_cast<SGE_Bool>(g_engine.HasError());
     }
+    
+    SGE_Bool SGE_IsRunning() {
+        return static_cast<SGE_Bool>(g_engine.IsRunning());
+    }
+    
+    void SGE_Exit() {  g_engine.Exit(); }
 
-    void SGE_SetRefreshColor(SGE_Color color) {
-        g_engine.refreshColor = sf::Color(color.r, color.g, color.b, color.a);
+    void SGE_SetRefreshColor(const SGE_Color* color) {
+        g_engine.refreshColor = sf::Color(color->r, color->g,
+                                          color->b, color->a);
     }
 
     SGE_UIVec2 SGE_GetWindowSize() {
         const auto& windowSize = g_engine.window.getSize();
-        return {
-            windowSize.x, windowSize.y
-        };
+        return { windowSize.x, windowSize.y };
     }
 
     SGE_Bool SGE_EntityCreate(SGE_UUID* entity) {
@@ -297,17 +317,6 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityRemoveAttribute(SGE_UUID entity, SGE_Attribute attrib) {
-        SGE_Bool rc = SGE_False;
-        g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
-            if (auto foundEntity = FindEntity(entities, entity)) {
-                foundEntity->RemoveAttribute(attrib);
-                rc = SGE_True;
-            }
-        });
-        return rc;
-    }
-
     SGE_Bool SGE_EntitySetAnimation(SGE_UUID entity, SGE_UUID animation) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, animation](EntityMap& entities) {
@@ -347,22 +356,22 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetPosition(SGE_UUID entity, SGE_Vec2 pos) {
+    SGE_Bool SGE_EntitySetPosition(SGE_UUID entity, const SGE_Vec2* pos) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &pos](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
-                foundEntity->SetPosition({ pos.x, pos.y });
+                foundEntity->SetPosition({ pos->x, pos->y });
                 rc = SGE_True;
             }
         });
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetScale(SGE_UUID entity, SGE_Vec2 scale) {
+    SGE_Bool SGE_EntitySetScale(SGE_UUID entity, const SGE_Vec2* scale) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &scale](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
-                gfxComp->SetScale({ scale.x, scale.y });
+                gfxComp->SetScale({ scale->x, scale->y });
                 rc = SGE_True;
             }
         });
@@ -373,13 +382,15 @@ extern "C" {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, mode](EntityMap& entities) {
             static const std::array<sf::BlendMode, 4> modes {{
-                    sf::BlendNone, sf::BlendAdd, sf::BlendAlpha, sf::BlendMultiply
-                }};
+                sf::BlendNone, sf::BlendAdd, sf::BlendAlpha, sf::BlendMultiply
+            }};
             if (mode >= 0 && mode < SGE_BM_Count) {
                 if (auto gfxComp = FindGfxComp(entities, entity)) {
                     gfxComp->GetRenderStates().blendMode = modes[mode];
                     rc = SGE_True;
                 }
+            } else {
+                g_engine.PushError(errors::badBM);
             }
         });
         return rc;
@@ -396,11 +407,11 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetColor(SGE_UUID entity, SGE_Color color) {
+    SGE_Bool SGE_EntitySetColor(SGE_UUID entity, const SGE_Color* color) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &color](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
-                gfxComp->SetColor({ color.r, color.g, color.b, color.a });
+                gfxComp->SetColor({ color->r, color->g, color->b, color->a });
                 rc = SGE_True;
             }
         });
@@ -447,6 +458,25 @@ extern "C" {
         return rc;
     }
 
+    SGE_Bool SGE_EntityRemoveAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+        SGE_Bool rc = SGE_False;
+        g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
+            if (auto foundEntity = FindEntity(entities, entity)) {
+                foundEntity->RemoveAttribute(attrib);
+                rc = SGE_True;
+            }
+        });
+        return rc;
+    }
+
+    SGE_Bool SGE_EntityEmitSound(SGE_UUID entity,
+                                 SGE_UUID sound,
+                                 float attenuation ) {
+        SGE_Bool ret = SGE_False;
+        // TODO...
+        return ret;
+    }
+    
     SGE_Bool SGE_CameraSetTarget(SGE_UUID entity) {
         SGE_Bool rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
@@ -458,8 +488,8 @@ extern "C" {
         return rc;
     }
 
-    void SGE_CameraSetCenter(SGE_Vec2 center) {
-        g_engine.camera.SetCenter({ center.x, center.y });
+    void SGE_CameraSetCenter(const SGE_Vec2* center) {
+        g_engine.camera.SetCenter({ center->x, center->y });
     }
 
     void SGE_CameraSetSpringiness(float springiness) {
@@ -478,29 +508,43 @@ extern "C" {
 
     SGE_Bool SGE_TimerCreate(SGE_UUID* timer) {
         const auto uuid = g_engine.NewUUID();
-        g_engine.timers[uuid] = SteadyTimer{};
-        *timer = uuid;
+        g_engine.WithTimers([&](TimerMap& timers) {
+            timers[uuid] = SteadyTimer{};
+            *timer = uuid;
+        });
         return SGE_True;
     }
 
     SGE_Bool SGE_TimerReset(SGE_UUID timer, SGE_USec* elapsed) {
-        auto timerIter = g_engine.timers.find(timer);
-        if (timerIter != g_engine.timers.end()) {
-            *elapsed = timerIter->second.Reset();
-            return SGE_True;
-        }
-        return SGE_False;
+        SGE_Bool rc = SGE_False;
+        g_engine.WithTimers([&](TimerMap& timers) {
+            auto timerIter = timers.find(timer);
+            if (timerIter != timers.end()) {
+                *elapsed = timerIter->second.Reset();
+                rc = SGE_True;
+            }
+        });
+        return rc;
     }
 
     SGE_Bool SGE_TimerRemove(SGE_UUID timer) {
-        auto timerIter = g_engine.timers.find(timer);
-        if (timerIter != g_engine.timers.end()) {
-            g_engine.timers.erase(timerIter);
-            return SGE_True;
-        }
-        return SGE_False;
+        SGE_Bool rc = SGE_False;
+        g_engine.WithTimers([&](TimerMap& timers) {
+            auto timerIter = timers.find(timer);
+            if (timerIter != timers.end()) {
+                timers.erase(timerIter);
+                rc = SGE_True;
+            }
+        });
+        return rc;
     }
 
+    SGE_Bool SGE_SoundCreate(SGE_UUID* sound, const char* sourceFile) {
+        SGE_Bool rc = SGE_False;
+        // TODO...
+        return rc;
+    }
+    
     SGE_Bool SGE_AnimationCreate(SGE_UUID* animation,
                                  const char* sourceFile,
                                  SGE_IVec2 start,
@@ -512,7 +556,7 @@ extern "C" {
         g_engine.WithAnimations([&](AnimationMap& animations) {
             const auto uuid = g_engine.NewUUID();
             animations[uuid] = {
-                *req->GetResult(), Rect {
+                *req->GetResult(), IntRect {
                     start.x, start.y, frameSize.x, frameSize.y
                 }, {
                     origin.x, origin.y
@@ -522,6 +566,13 @@ extern "C" {
             rc = SGE_True;
         });
         return rc;
+    }
+
+    SGE_Bool SGE_CollisionTest() {
+        SGE_Bool ret = SGE_False;
+        // TODO: CollisionTest should run a collision check, and
+        // push a collision event to the queue for each collision.
+        return ret;
     }
 
     SGE_Bool SGE_PollEvents(SGE_EventHolder* event) {
@@ -534,11 +585,6 @@ extern "C" {
             }
         });
         return ret;
-    }
-
-    SGE_Bool SGE_Main(void(*entryFn)()) {
-        g_engine.Run(entryFn);
-        return static_cast<SGE_Bool>(g_engine.HasError());
     }
 
     void SGE_Microsleep(SGE_USec sleepTime) {
@@ -555,9 +601,5 @@ extern "C" {
     
     const char* SGE_GetError() {
         return g_engine.PollError();
-    }
-   
-    void SGE_Exit() {
-        g_engine.running = false;
     }
 }

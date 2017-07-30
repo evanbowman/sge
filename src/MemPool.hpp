@@ -1,36 +1,40 @@
 #pragma once
 
-#include <forward_list>
 #include <mutex>
 #include <memory>
-#include <iostream>
+#include <forward_list>
+#include <array>
 
-template <typename T>
+template <typename T, size_t GroupSize>
 class MemPool {
     using Byte = uint8_t;
     struct Cell {
         Cell* next;
         T data;
     };
-    Cell* m_freeList = nullptr;
+    using Group = std::array<Byte, GroupSize * sizeof(Cell)>;
+    
+    Cell* m_freeList;
+    std::forward_list<Group> m_groups;
     std::mutex m_mutex;
     
-    void EnlistChunk() {
-        static const size_t allocCount = 127;
-        static const size_t allocSize = sizeof(Cell) * allocCount;
-        auto mem = (Cell*)malloc(allocSize);
-        for (Cell* cell = mem; cell < mem + allocCount; ++cell) {
-            cell->next = m_freeList;
-            m_freeList = cell;
+    void EnlistGroup() {
+        m_groups.emplace_front();
+        Cell* cells = reinterpret_cast<Cell*>(m_groups.front().data());
+        for (int i = 0; i < GroupSize; ++i) {
+            cells[i].next = m_freeList;
+            m_freeList = &cells[i];
         }
     }
+    
 public:
-    MemPool(const MemPool& other) = delete;    
+    MemPool(const MemPool& other) = delete;
+    
     MemPool() : m_freeList(nullptr) {}
 
     T* Alloc() {
         std::lock_guard<std::mutex> lk(m_mutex);
-        if (m_freeList == nullptr) EnlistChunk();
+        if (m_freeList == nullptr) EnlistGroup();
         T* mem = &m_freeList->data;
         m_freeList = m_freeList->next;
         return mem;

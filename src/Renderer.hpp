@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <list>
+#include "PoolAllocator.hpp"
 
 #include "Types.hpp"
 
@@ -11,11 +13,11 @@ class Entity;
 
 class Renderer {
 public:
-    Renderer(sf::RenderWindow& window, Camera& camera);
-
+    void Configure(const Camera& camera);
+    
     void Visit(Entity& entity, AnimationComponent& comp);
 
-    void Display();
+    void Display(sf::RenderWindow& window);
     
 private:
     struct RenderTask {
@@ -23,7 +25,11 @@ private:
         sf::RenderStates renderStates;
         ZOrderIndex zOrder;
     };
-    sf::RenderWindow& m_windowRef;
-    Camera& m_cameraRef;
-    std::vector<RenderTask> m_drawList;
+    struct Config {
+        FloatRect cameraViewBounds;
+        Vec2 cameraViewCenter;
+        Vec2 cameraViewSize;
+    } m_config;
+
+    std::vector<RenderTask> m_displayList;
 };

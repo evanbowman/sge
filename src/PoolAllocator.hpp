@@ -4,9 +4,9 @@
 
 #include "MemPool.hpp"
 
-template <typename T>
+template <typename T, size_t GroupSize>
 class PoolAllocator {
-    static MemPool<T> m_pool;
+    static MemPool<T, GroupSize> m_pool;
 public:
     using value_type      = T;
     using pointer         = T*;
@@ -18,19 +18,20 @@ public:
     
     template <typename U>
     struct rebind {
-        using other = PoolAllocator<U>;
+        using other = PoolAllocator<U, GroupSize>;
     };
 
     PoolAllocator() noexcept {};
     
     PoolAllocator(const PoolAllocator&) noexcept {};
     
-    PoolAllocator<T>& operator=(const PoolAllocator&) { return *this; }
+    PoolAllocator<T, GroupSize>&
+    operator=(const PoolAllocator&) { return *this; }
     
     ~PoolAllocator() {}
     
     template<typename U>
-    PoolAllocator(const PoolAllocator<U>&) noexcept {};
+    PoolAllocator(const PoolAllocator<U, GroupSize>&) noexcept {};
     
     pointer allocate(size_type) { return m_pool.Alloc(); }
 
@@ -50,15 +51,17 @@ public:
     }
 };
 
-template <typename T, typename U>
-inline bool operator==(const PoolAllocator<T>&, const PoolAllocator<U>&) {
+template <typename T, typename U, size_t GroupSize>
+inline bool operator==(const PoolAllocator<T, GroupSize>&,
+                       const PoolAllocator<U, GroupSize>&) {
     return true;
 }
 
-template <typename T, typename U>
-inline bool operator!=(const PoolAllocator<T>& a, const PoolAllocator<U>& b) {
+template <typename T, typename U, size_t GroupSize>
+inline bool operator!=(const PoolAllocator<T, GroupSize>& a,
+                       const PoolAllocator<U, GroupSize>& b) {
     return !(a == b);
 }
 
-template <typename T>
-MemPool<T> PoolAllocator<T>::m_pool;
+template <typename T, size_t GroupSize>
+MemPool<T, GroupSize> PoolAllocator<T, GroupSize>::m_pool;
