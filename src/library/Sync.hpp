@@ -3,15 +3,15 @@
 #include <mutex>
 #include <functional>
 
-template <typename T>
+template <typename T, typename Lock = std::mutex>
 class Sync {
 public:
     template <typename F>
-    void Get(F&& handler) {
-        std::lock_guard<std::mutex> lock(m_mutex);
+    void Enter(F&& handler) {
+        std::lock_guard<Lock> lkGuard(m_lock);
         handler(m_data);
     }
 private:
-    std::mutex m_mutex;
+    Lock m_lock;
     T m_data;
 };

@@ -61,6 +61,10 @@ typedef struct __SGE_CollisionEvent {
     SGE_UUID first, second;
 } SGE_CollisionEvent;
 
+typedef struct __SGE_PowerEvent {
+    
+} SGE_PowerEvent;
+
 typedef union __SGE_Event {
     SGE_TextEnteredEvent text;
     SGE_KeyEvent key;

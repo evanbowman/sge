@@ -13,7 +13,10 @@ extern "C" {
     void SGE_SetRefreshColor(const SGE_Color* color);
 
     SGE_UIVec2 SGE_GetWindowSize();
-
+    SGE_Bool SGE_ChangeWindow(SGE_UIVec2* size,
+                              const char* title,
+                              SGE_Bool fullscreen);
+    
     SGE_Bool SGE_EntityCreate(SGE_UUID* entity);
     SGE_Bool SGE_EntityClone(SGE_UUID src, SGE_UUID* dest);
     SGE_Bool SGE_EntityAddAttribute(SGE_UUID entity, SGE_Attribute attrib);
@@ -43,6 +46,9 @@ extern "C" {
     SGE_Bool SGE_TimerRemove(SGE_UUID timer);
 
     SGE_Bool SGE_SoundCreate(SGE_UUID* sound, const char* sourceFile);
+    SGE_Bool SGE_SoundPlay(SGE_UUID sound,
+                           SGE_Vec2* position,
+                           float attenuation);
     
     SGE_Bool SGE_AnimationCreate(SGE_UUID* animation,
                                  const char* sourceFile,

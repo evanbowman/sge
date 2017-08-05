@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <list>
-#include "PoolAllocator.hpp"
 
 #include "Types.hpp"
 
@@ -25,7 +24,8 @@ private:
         sf::RenderStates renderStates;
         ZOrderIndex zOrder;
     };
-    struct Config {
+    
+    struct {
         FloatRect cameraViewBounds;
         Vec2 cameraViewCenter;
         Vec2 cameraViewSize;

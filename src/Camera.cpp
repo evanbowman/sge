@@ -1,9 +1,11 @@
 #include "Camera.hpp"
 
-Camera::Camera(sf::RenderWindow& window) :
-    m_window(window),
-    m_view(m_window.getView()),
+Camera::Camera() :
     m_springiness(2) {}
+
+void Camera::Init(const sf::RenderWindow& window) {
+    m_view = window.getView();
+}
 
 void Camera::SetTarget(std::shared_ptr<Entity> target) {
     m_target = target;
@@ -21,7 +23,7 @@ template <typename T> T lerp(const T & A, const T & B, const float t) {
     return A * t + (1 - t) * B;
 }
 
-void Camera::Update(USec dt) {
+void Camera::Update(USec dt, sf::RenderWindow& window) {
     if (auto targetSp = m_target.lock()) {
         const auto& targetPos = targetSp->GetPosition();
         const auto& center = m_view.getCenter();
@@ -32,15 +34,14 @@ void Camera::Update(USec dt) {
             m_view.setCenter(targetPos);
         }
     }
-    m_window.setView(m_view);
+    window.setView(m_view);
 }
 
 void Camera::SetCenter(const Vec2& center) {
     m_view.setCenter(center);
 }
 
-void Camera::SetZoom(float zoom) {
-    const auto& windowSize = m_window.getSize();
+void Camera::SetZoom(float zoom, const UIVec2& windowSize) {
     m_view.setSize({ windowSize.x * (1.f / zoom),
                      windowSize.y * (1.f / zoom) });
 }
