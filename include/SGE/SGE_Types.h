@@ -3,7 +3,7 @@
 
 #include "SGE_KeyCode.h"
 
-typedef unsigned long SGE_UUID;
+typedef unsigned long SGE_GUID;
 typedef unsigned char SGE_u8;
 typedef unsigned long SGE_USec;
 typedef unsigned long SGE_Keyframe;
@@ -58,7 +58,7 @@ typedef struct __SGE_KeyEvent {
 } SGE_KeyEvent;
 
 typedef struct __SGE_CollisionEvent {
-    SGE_UUID first, second;
+    SGE_GUID first, second;
 } SGE_CollisionEvent;
 
 typedef struct __SGE_PowerEvent {

@@ -6,6 +6,10 @@
 class Entity {
 public:
     using GraphicsCompRef = std::unique_ptr<GraphicsComponent>;
+
+    explicit Entity(SGE_GUID handle);
+
+    SGE_GUID GetId() const;
     
     const Vec2& GetPosition() const;
     void SetPosition(const Vec2& position);
@@ -21,6 +25,7 @@ public:
     
 private:
     Vec2 m_position;
+    const SGE_GUID m_handle;
     AttributeSet m_attributes;
     GraphicsCompRef m_graphicsComponent;
 };

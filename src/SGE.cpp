@@ -32,9 +32,9 @@ namespace errors {
     static const auto badVideoMode = "Invalid video mode";
 }
 
-using EntityMap = std::unordered_map<SGE_UUID, EntityRef>;
-using TimerMap = std::unordered_map<SGE_UUID, SteadyTimer>;
-using AnimationMap = std::unordered_map<SGE_UUID, Animation>;
+using EntityMap = std::unordered_map<SGE_GUID, EntityRef>;
+using TimerMap = std::unordered_map<SGE_GUID, SteadyTimer>;
+using AnimationMap = std::unordered_map<SGE_GUID, Animation>;
 using EventQueue = std::queue<SGE_EventHolder>;
 
 class Engine {
@@ -207,7 +207,7 @@ public:
         m_window.Enter(procedure);
     }
     
-    SGE_UUID NewUUID() { return ++m_uidCounter; }
+    SGE_GUID NewGUID() { return ++m_uidCounter; }
 
     bool IsRunning() const { return m_running.load(); }
     void Exit() { m_running = false; }
@@ -225,6 +225,20 @@ public:
             windowSize = size;
         });
     }
+
+    void CollisionTest() {
+        m_entities.Enter([this](EntityMap&) {
+            m_collisionChecker.Enter([this](CollisionChecker& cc) {
+                cc.Update([this](Entity& first, Entity& second) {
+                    SGE_EventHolder holder;
+                    holder.event.collision.first = first.GetId();
+                    holder.event.collision.second = second.GetId();
+                    holder.code = SGE_EventCode_Collision;
+                    this->RecordEvent(holder);
+                });
+            });
+        });
+    }
     
 private:
     // Note: the Engine needs to be threadsafe. If a member isn't
@@ -236,7 +250,7 @@ private:
     Sync<AnimationMap, SpinLock> m_animations;
     Sync<TimerMap> m_timers;
     Sync<TextureReqList> m_textureRequests;
-    Sync<CollisionChecker> m_collisionChecker;
+    Sync<CollisionChecker, SpinLock> m_collisionChecker;
     // Note: cache the window size because otherwise we'd need to
     // enter the window's critical section to retrieve it, and the
     // rendering thread likes to spend a lot of time in the window's
@@ -245,14 +259,14 @@ private:
     std::atomic_bool m_running;
     std::vector<const char*> m_errors;
     std::mutex m_errorsMtx;
-    std::atomic<SGE_UUID> m_uidCounter;
+    std::atomic<SGE_GUID> m_uidCounter;
     Renderer m_renderer;
 };
 
 auto& g_engine = Singleton<Engine>::Instance();
 
 namespace {
-    Entity* FindEntity(EntityMap& entities, SGE_UUID id) {
+    Entity* FindEntity(EntityMap& entities, SGE_GUID id) {
         auto entityIter = entities.find(id);
         if (entityIter == entities.end()) {
             g_engine.PushError(errors::badEntityHandle);
@@ -261,7 +275,7 @@ namespace {
         return entityIter->second.get();
     }
 
-    GraphicsComponent* FindGfxComp(EntityMap& entities, SGE_UUID id) {
+    GraphicsComponent* FindGfxComp(EntityMap& entities, SGE_GUID id) {
         auto foundEntity = FindEntity(entities, id);
         if (!foundEntity) {
             return nullptr;
@@ -273,7 +287,7 @@ namespace {
         return nullptr;
     }
 
-    EntityRef FindEntityRef(EntityMap& entities, SGE_UUID entity) {
+    EntityRef FindEntityRef(EntityMap& entities, SGE_GUID entity) {
         auto entityIter = entities.find(entity);
         if (entityIter == entities.end()) {
             g_engine.PushError(errors::badEntityHandle);
@@ -327,12 +341,16 @@ extern "C" {
         return ret;
     }
     
-    SGE_Bool SGE_EntityCreate(SGE_UUID* entity) {
+    SGE_Bool SGE_EntityCreate(SGE_GUID* entity) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
-            auto created = std::make_shared<Entity>();
+            // If the game fails to allocate memory for an entity, it
+            // currently wastes a GUID. Failed memory allocations are
+            // an extreme case, so probably not worth worrying too
+            // much about wasted identifiers.
+            const auto uuid = g_engine.NewGUID();
+            auto created = std::make_shared<Entity>(uuid);
             if (created) {
-                const auto uuid = g_engine.NewUUID();
                 entities[uuid] = created;
                 *entity = uuid;
                 rc = SGE_True;
@@ -341,11 +359,12 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityClone(SGE_UUID src, SGE_UUID* dest) {
+    SGE_Bool SGE_EntityClone(SGE_GUID src, SGE_GUID* dest) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, src, dest](EntityMap& entities) {
             if (auto foundSrc = FindEntity(entities, src)) {
-                auto clone = std::make_shared<Entity>();
+                const auto uuid = g_engine.NewGUID();
+                auto clone = std::make_shared<Entity>(uuid);
                 if (!clone) {
                     return;
                 }
@@ -360,7 +379,6 @@ extern "C" {
                     }
                 }
                 clone->SetGraphicsComponent(std::move(gfxCompClone));
-                const auto uuid = g_engine.NewUUID();
                 entities[uuid] = clone;
                 *dest = uuid;
                 rc = SGE_True;
@@ -369,7 +387,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityAddAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+    SGE_Bool SGE_EntityAddAttribute(SGE_GUID entity, SGE_Attribute attrib) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -380,7 +398,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetAnimation(SGE_UUID entity, SGE_UUID animation) {
+    SGE_Bool SGE_EntitySetAnimation(SGE_GUID entity, SGE_GUID animation) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, animation](EntityMap& entities) {
             auto foundEntity = FindEntity(entities, entity);
@@ -402,7 +420,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetKeyframe(SGE_UUID entity, SGE_Keyframe keyframe) {
+    SGE_Bool SGE_EntitySetKeyframe(SGE_GUID entity, SGE_Keyframe keyframe) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, keyframe](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -419,7 +437,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetPosition(SGE_UUID entity, const SGE_Vec2* pos) {
+    SGE_Bool SGE_EntitySetPosition(SGE_GUID entity, const SGE_Vec2* pos) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &pos](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -430,7 +448,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetScale(SGE_UUID entity, const SGE_Vec2* scale) {
+    SGE_Bool SGE_EntitySetScale(SGE_GUID entity, const SGE_Vec2* scale) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &scale](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -441,7 +459,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetBlendMode(SGE_UUID entity, SGE_BlendMode mode) {
+    SGE_Bool SGE_EntitySetBlendMode(SGE_GUID entity, SGE_BlendMode mode) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, mode](EntityMap& entities) {
             static const std::array<sf::BlendMode, 4> modes {{
@@ -459,7 +477,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetZOrder(SGE_UUID entity, int zOrder) {
+    SGE_Bool SGE_EntitySetZOrder(SGE_GUID entity, int zOrder) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, zOrder](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -470,7 +488,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntitySetColor(SGE_UUID entity, const SGE_Color* color) {
+    SGE_Bool SGE_EntitySetColor(SGE_GUID entity, const SGE_Color* color) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, &color](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -481,7 +499,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityGetPosition(SGE_UUID entity, SGE_Vec2* position) {
+    SGE_Bool SGE_EntityGetPosition(SGE_GUID entity, SGE_Vec2* position) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, position](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -493,7 +511,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityGetKeyframe(SGE_UUID entity, SGE_Keyframe* keyframe) {
+    SGE_Bool SGE_EntityGetKeyframe(SGE_GUID entity, SGE_Keyframe* keyframe) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, keyframe](EntityMap& entities) {
             if (auto gfxComp = FindGfxComp(entities, entity)) {
@@ -508,7 +526,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityRemove(SGE_UUID entity) {
+    SGE_Bool SGE_EntityRemove(SGE_GUID entity) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
             auto entityIter = entities.find(entity);
@@ -521,7 +539,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityRemoveAttribute(SGE_UUID entity, SGE_Attribute attrib) {
+    SGE_Bool SGE_EntityRemoveAttribute(SGE_GUID entity, SGE_Attribute attrib) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity, attrib](EntityMap& entities) {
             if (auto foundEntity = FindEntity(entities, entity)) {
@@ -532,15 +550,15 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_EntityEmitSound(SGE_UUID entity,
-                                 SGE_UUID sound,
+    SGE_Bool SGE_EntityEmitSound(SGE_GUID entity,
+                                 SGE_GUID sound,
                                  float attenuation ) {
         auto ret = SGE_False;
         // TODO...
         return ret;
     }
     
-    SGE_Bool SGE_CameraSetTarget(SGE_UUID entity) {
+    SGE_Bool SGE_CameraSetTarget(SGE_GUID entity) {
         auto rc = SGE_False;
         g_engine.WithEntities([&rc, entity](EntityMap& entities) {
             if (auto entityRef = FindEntityRef(entities, entity)) {
@@ -569,8 +587,8 @@ extern "C" {
         return { viewSize.x, viewSize.y };
     }
 
-    SGE_Bool SGE_TimerCreate(SGE_UUID* timer) {
-        const auto uuid = g_engine.NewUUID();
+    SGE_Bool SGE_TimerCreate(SGE_GUID* timer) {
+        const auto uuid = g_engine.NewGUID();
         g_engine.WithTimers([&](TimerMap& timers) {
             timers[uuid] = SteadyTimer{};
             *timer = uuid;
@@ -578,7 +596,7 @@ extern "C" {
         return SGE_True;
     }
 
-    SGE_Bool SGE_TimerReset(SGE_UUID timer, SGE_USec* elapsed) {
+    SGE_Bool SGE_TimerReset(SGE_GUID timer, SGE_USec* elapsed) {
         auto rc = SGE_False;
         g_engine.WithTimers([&](TimerMap& timers) {
             auto timerIter = timers.find(timer);
@@ -590,7 +608,7 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_TimerRemove(SGE_UUID timer) {
+    SGE_Bool SGE_TimerRemove(SGE_GUID timer) {
         auto rc = SGE_False;
         g_engine.WithTimers([&](TimerMap& timers) {
             auto timerIter = timers.find(timer);
@@ -602,19 +620,19 @@ extern "C" {
         return rc;
     }
 
-    SGE_Bool SGE_SoundCreate(SGE_UUID* sound, const char* sourceFile) {
+    SGE_Bool SGE_SoundCreate(SGE_GUID* sound, const char* sourceFile) {
         auto rc = SGE_False;
         // TODO...
         return rc;
     }
 
-    SGE_Bool SGE_SoundPlay(SGE_UUID sound, SGE_Vec2* position, float attenuation) {
+    SGE_Bool SGE_SoundPlay(SGE_GUID sound, SGE_Vec2* position, float attenuation) {
         auto rc = SGE_False;
 
         return rc;
     }
     
-    SGE_Bool SGE_AnimationCreate(SGE_UUID* animation,
+    SGE_Bool SGE_AnimationCreate(SGE_GUID* animation,
                                  const char* sourceFile,
                                  SGE_IVec2 start,
                                  SGE_IVec2 frameSize,
@@ -623,7 +641,7 @@ extern "C" {
         auto req = std::make_shared<TextureRequest>(sourceFile);
         g_engine.EnqueueTextureRequest(req);
         g_engine.WithAnimations([&](AnimationMap& animations) {
-            const auto uuid = g_engine.NewUUID();
+            const auto uuid = g_engine.NewGUID();
             animations[uuid] = {
                 *req->GetResult(), IntRect {
                     start.x, start.y, frameSize.x, frameSize.y
@@ -639,8 +657,7 @@ extern "C" {
 
     SGE_Bool SGE_CollisionTest() {
         auto ret = SGE_True;
-        // TODO: CollisionTest should run a collision check, and
-        // push a collision event to the queue for each collision.
+        g_engine.CollisionTest();
         return ret;
     }
 

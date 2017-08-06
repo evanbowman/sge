@@ -10,7 +10,19 @@
 
 class CollisionChecker {
 public:
-    void Update();
+    template <typename F>
+    void Update(F && onCollision) {
+        for (auto it = m_sectors.begin(); it != m_sectors.end();) {
+            if (!it->second.dynamicEntities.empty() ||
+                !it->second.staticEntities.empty()) {
+                UpdateSector(it->first, it->second);
+                ++it;
+            } else {
+                it = m_sectors.erase(it);
+            }
+        }
+    }
+    
     void AddDynamicEntity(EntityRef entity);
     void AddStaticEntity(EntityRef entity);
 
@@ -32,6 +44,5 @@ private:
     Sector& FindOrCreateSector(const Coord& coord);
 
     SectorTree m_sectors;
-    std::mutex m_sectorsMtx;
     Vec2 m_sectorSize { 128.f, 128.f };
 };

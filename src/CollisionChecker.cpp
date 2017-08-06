@@ -20,7 +20,6 @@ CollisionChecker::Sector& CollisionChecker::FindOrCreateSector(const Coord& coor
 }
 
 void CollisionChecker::AddDynamicEntity(EntityRef entity) {
-    std::lock_guard<std::mutex> lock(m_sectorsMtx);
     const auto targetSectorLoc = CalcTargetSectorLoc(entity->GetPosition());
     auto& sector = FindOrCreateSector(targetSectorLoc);
     sector.dynamicEntities.push_back(entity);
@@ -28,24 +27,10 @@ void CollisionChecker::AddDynamicEntity(EntityRef entity) {
 }
 
 void CollisionChecker::AddStaticEntity(EntityRef entity) {
-    std::lock_guard<std::mutex> lock(m_sectorsMtx);
     const auto targetSectorLoc = CalcTargetSectorLoc(entity->GetPosition());
     auto& sector = FindOrCreateSector(targetSectorLoc);
     sector.staticEntities.push_back(entity);
     sector.pairsAreStale = true;
-}
-
-void CollisionChecker::Update() {
-    std::lock_guard<std::mutex> lock(m_sectorsMtx);
-    for (auto it = m_sectors.begin(); it != m_sectors.end();) {
-        if (!it->second.dynamicEntities.empty() ||
-            !it->second.staticEntities.empty()) {
-            UpdateSector(it->first, it->second);
-            ++it;
-        } else {
-            it = m_sectors.erase(it);
-        }
-    }
 }
 
 CollisionChecker::Sector::AList& CollisionChecker::Sector::GetPairs() {

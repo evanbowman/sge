@@ -1,5 +1,11 @@
 #include "Entity.hpp"
 
+Entity::Entity(SGE_GUID handle) : m_handle(handle) {}
+
+SGE_GUID Entity::GetId() const {
+    return m_handle;
+}
+
 const Vec2& Entity::GetPosition() const {
     return m_position;
 }
